@@ -1,3 +1,28 @@
+-- Status Category Table --
+CREATE TABLE REF_StatusCategory (
+    StatusCategoryID INT AUTO_INCREMENT,
+    CategoryName VARCHAR(50) NOT NULL
+);
+
+-- Status Table --
+CREATE TABLE REF_Status (
+    StatusID INT AUTO_INCREMENT,
+    StatusCategoryID INT NOT NULL,
+    StatusName VARCHAR(50) NOT NULL,
+    FOREIGN KEY (StatusCategoryID) REFERENCES REF_StatusCategory(StatusCategoryID)
+);
+
+-- BRGY HEALTH WORKER RECORDS (Assigned to ASHLEY) --
+CREATE TABLE brgy_health_worker (
+	hWorkerID			INT				AUTO_INCREMENT,
+	hWorkerLastName		VARCHAR(45)		NOT NULL,
+	hWorkerFirstName	VARCHAR(45)		NOT NULL,
+	hWorkerPosition		VARCHAR(45)		NOT NULL,
+	hContactInformation	VARCHAR(11)		NOT NULL,
+	hWorkerStatusID INT NOT NULL,
+    FOREIGN KEY (hWorkerStatusID) REFERENCES REF_Status(StatusID)
+);
+
 -- BRGY FACILITY RECORDS (Assigned to KHYLE) --
 CREATE TABLE brgy_facility (
 	facilityID 			INT 			AUTO_INCREMENT,
