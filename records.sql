@@ -54,3 +54,38 @@ CREATE TABLE supplier (
     CONSTRAINT supplier_pk PRIMARY KEY (supplierID),
     CONSTRAINT supplier_name_uq UNIQUE (supplierName),
      CONSTRAINT supplier_leadtime_chk CHECK (deliveryLeadTime > 0));
+
+-- SUPPLIER RECORDS (Assigned to RAPHY) --
+CREATE TABLE patient (
+	patientID			INT				AUTO_INCREMENT,
+    lastName			VARCHAR(45)		NOT NULL,
+    firstName			VARCHAR(45)		NOT NULL,
+    birthDate			DATE 			NOT NULL,
+    gender				ENUM('Male', 'Female')		NOT NULL,
+    bloodType			ENUM('O+', 'O-', 
+							'A+', 'A-', 
+							'B+', 'B-', 
+							'AB+', 'AB-')			NOT NULL,
+	address				VARCHAR(150)	NOT NULL,
+    primaryPhone		INT				NOT NULL,
+    emergencyContact	VARCHAR(80)		NOT NULL,
+    -- will edit
+    patientStatus		ENUM('dead', 'alive')		NOT NULL,
+    PRIMARY KEY (patientID)
+);
+
+/*inc
+CREATE TABLE immunization_administration (
+	immunizationID,
+    patientID,
+    vaccineID,
+    hWorkerID,
+    administrationDate,
+    vaccineType,
+    batchNumber,
+    dosageNumber,
+    nextVaccinationDate,
+    immunizationStatus,
+    sideEffects
+);
+*/
