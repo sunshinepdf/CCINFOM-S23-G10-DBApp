@@ -23,6 +23,14 @@ CREATE TABLE worker (
 	hContactInformation	VARCHAR(11)		NOT NULL,
 	hWorkerStatusID INT NOT NULL,
     FOREIGN KEY (hWorkerStatusID) REFERENCES REF_Status(StatusID)
+    CONSTRAINT worker_pk PRIMARY KEY (hWorkerID),
+    CONSTRAINT workerstatus_fk FOREIGN KEY (hWorkerStatusID) REFERENCES REF_Status(StatusID),
+    CONSTRAINT workerfacility_fk FOREIGN KEY (facilityID) REFERENCES facility(facilityID),
+    CONSTRAINT worker_uqcontact UNIQUE (hContactInformation),
+    CONSTRAINT worker_lastnameCheck CHECK (hWorkerLastName REGEXP '^[A-Za-z]+$'),  
+    CONSTRAINT worker_firstnameCheck CHECK (hWorkerFirstName REGEXP '^[A-Za-z]+$'),
+    CONSTRAINT worker_positionCheck CHECK (hWorkerPosition REGEXP '^[A-Za-z ]+$'),  
+    CONSTRAINT worker_contactCheck CHECK (hContactInformation REGEXP '^[0-9]{11}$')  
 );
 
 -- BRGY FACILITY RECORDS (Assigned to KHYLE) --
