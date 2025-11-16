@@ -1,3 +1,4 @@
+# REFERENCE RECORDS
 -- Status Category Table --
 CREATE TABLE REF_StatusCategory (
     StatusCategoryID INT AUTO_INCREMENT,
@@ -12,8 +13,9 @@ CREATE TABLE REF_Status (
     FOREIGN KEY (StatusCategoryID) REFERENCES REF_StatusCategory(StatusCategoryID)
 );
 
+# CORE RECORDS
 -- BRGY HEALTH WORKER RECORDS (Assigned to ASHLEY) --
-CREATE TABLE brgy_health_worker (
+CREATE TABLE worker (
 	hWorkerID			INT				AUTO_INCREMENT,
 	hWorkerLastName		VARCHAR(45)		NOT NULL,
 	hWorkerFirstName	VARCHAR(45)		NOT NULL,
@@ -24,38 +26,42 @@ CREATE TABLE brgy_health_worker (
 );
 
 -- BRGY FACILITY RECORDS (Assigned to KHYLE) --
-CREATE TABLE brgy_facility (
+CREATE TABLE facility (
 	facilityID 			INT 			AUTO_INCREMENT,
     facilityName		VARCHAR(60)		NOT NULL,
-    facilityAddress 	VARCHAR(100)	NOT NULL,
+    facilityAddress 	VARCHAR(100)	NOT NULL, 
     facilityContactNum	VARCHAR(11)		NOT NULL,
     shiftStart			TIME			NOT NULL,
     shiftEnd			TIME			NOT NULL,
-    facilityStatus		ENUM('Operational',
-							 'Under Maintenance',
-                             'Closed')	DEFAULT 'Operational',
-CONSTRAINT brgyfacility_pk PRIMARY KEY (facilityID),
-CONSTRAINT brgyfacility_uqname UNIQUE (facilityName));
+    facilityStatusID	INT 			NOT NULL,
+    
+CONSTRAINT facility_pk PRIMARY KEY (facilityID),
+CONSTRAINT facilitystatus_fk FOREIGN KEY (facilityStatusID) REFERENCES REF_Status(StatusID),
+CONSTRAINT facility_uqname UNIQUE (facilityName), 
+CONSTRAINT facility_contactCheck CHECK (facilityContactNum REGEXP '^[0-9]{11}$'), # CHECKS to ensure only 11 digits from 0-9 are included in the contact number
+CONSTRAINT facility_shiftCheck CHECK (shiftEnd > shiftStart));
 
 -- SUPPLIER RECORDS (Assigned to KHYLE) --
 CREATE TABLE supplier (
 	supplierID 				INT 			AUTO_INCREMENT,
     supplierName 			VARCHAR(50)		NOT NULL,
     supplierAddress 		VARCHAR(100)	NOT NULL,
-    supplierContactNum		VARCHAR(11)		NOT NULL,
+    supplierContactNum		CHAR(11)		NOT NULL,
     supplierType			ENUM('Medical Equipment Supplier',
 								 'Medicine Supplier',
 								 'Vaccine Supplier')	
 											NOT NULL,
 	deliveryLeadTime		INT 			NOT NULL, 
-    transactionDetails 		VARCHAR(350)	NOT NULL,  -- TODO: Create a separate table to reference instead (?) --
-    supplierStatus      ENUM('Active', 'Inactive') DEFAULT 'Active',
+    transactionDetails 		VARCHAR(350)	NOT NULL, 
+    supplierStatusID     	INT				NOT NULL,
     
     CONSTRAINT supplier_pk PRIMARY KEY (supplierID),
+    CONSTRAINT supplierstatus_fk FOREIGN KEY (supplierStatusID) REFERENCES REF_Status(StatusID),
     CONSTRAINT supplier_name_uq UNIQUE (supplierName),
-     CONSTRAINT supplier_leadtime_chk CHECK (deliveryLeadTime > 0));
+    CONSTRAINT supplier_contact_chk CHECK (supplierContactNum REGEXP '^[0-9]{11}$'), # CHECKS to ensure only 11 digits from 0-9 are included in the contact number
+	CONSTRAINT supplier_leadtime_chk CHECK (deliveryLeadTime > 0));
 
--- SUPPLIER RECORDS (Assigned to RAPHY) --
+-- PATIENT RECORDS (Assigned to RAPHY) --
 CREATE TABLE patient (
 	patientID			INT				AUTO_INCREMENT,
     lastName			VARCHAR(45)		NOT NULL,
@@ -74,6 +80,8 @@ CREATE TABLE patient (
     PRIMARY KEY (patientID)
 );
 
+# TRANSACTION RECORDS
+-- IMMUNIZATION ADMINISTRATION TRANSACTION RECORDS (Assigned to RAPHY) --
 /*inc
 CREATE TABLE immunization_administration (
 	immunizationID,
@@ -89,3 +97,23 @@ CREATE TABLE immunization_administration (
     sideEffects
 );
 */
+
+-- PRESCRIPTION RECEIPT TRANSACTION RECORDS (Assigned to KHYLE) --
+CREATE TABLE prescription_receipt (
+	receiptID			 INT 	 AUTO_INCREMENT,
+    patientID			 INT	 NOT NULL,
+    consultationID 		 INT	 NOT NULL,
+    medicineID			 INT 	 NOT NULL,
+    workerID			 INT	 NOT NULL,
+    distributionDate	 DATE,
+    qtyDistributed 		 INT	 NOT NULL,
+    isValidPrescription  BOOLEAN DEFAULT FALSE,
+    inventoryUpdated	 BOOLEAN DEFAULT FALSE,
+    prescriptionStatusID INT	 NOT NULL,
+    
+    CONSTRAINT prescription_pk PRIMARY KEY (receiptID),
+    CONSTRAINT prescription_patient_fk FOREIGN KEY (patientID) REFERENCES patient(patientID),
+    CONSTRAINT prescription_medconsult_fk FOREIGN KEY (consultationID) REFERENCES medical_consultation(consultationID),
+    CONSTRAINT prescription_medicine_fk FOREIGN KEY (medicineID) REFERENCES medicine_inventory(medicineID),
+    CONSTRAINT prescription_healthworker_fk FOREIGN KEY (workerID) REFERENCES worker(hWorkerID),
+    CONSTRAINT prescreceipt_qty_chk CHECK (quantityDistributed > 0));
