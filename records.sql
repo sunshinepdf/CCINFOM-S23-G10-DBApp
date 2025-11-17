@@ -89,6 +89,24 @@ CREATE TABLE patient (
     CONSTRAINT patient_phoneCheck CHECK (primaryPhone REGEXP '^[0-9]{11}$')
 );
 
+-- MEDICINE INVENTORY RECORDS (Assigned to SPENCER) --
+CREATE TABLE medicine_inventory (
+    medID	 		INT 			AUTO_INCREMENT,
+    medName		 	VARCHAR(50) 	NOT NULL UNIQUE,
+    medType	 		ENUM('vaccine', 'medicine') NOT NULL,
+    medDesc		 	VARCHAR(200) 	NOT NULL,
+    quantityInStock INT 			NOT NULL DEFAULT 0,
+    expiryDate 		DATE 			NOT NULL,
+    medStatus	 	ENUM('available', 'expired', 'out of stock') NOT NULL DEFAULT ("available"),
+    PRIMARY KEY (medID),
+    
+    CONSTRAINT check_quantity_non_negative CHECK (quantityInStock >= 0),
+    CONSTRAINT check_future_expiry_date CHECK (expiryDate > CURDATE()),
+    CONSTRAINT chk_status_consistency CHECK ((quantityInStock > 0 AND expiryDate > CURDATE() AND medStatus = 'Available') OR
+        (quantityInStock = 0 AND medStatus = 'Out of Stock') OR
+        (expiryDate <= CURDATE() AND medStatus = 'Expired'))
+);
+
 # TRANSACTION RECORDS
 -- IMMUNIZATION ADMINISTRATION TRANSACTION RECORDS (Assigned to RAPHY) --
 CREATE TABLE immunization_administration (
@@ -107,7 +125,7 @@ CREATE TABLE immunization_administration (
     sideEffects				VARCHAR(100),
     PRIMARY KEY (immunizationID),
     FOREIGN KEY (patientID) REFERENCES patient(patientID),
-    FOREIGN KEY (vaccineID) REFERENCES medicine_inventory(medicineID),
+    FOREIGN KEY (vaccineID) REFERENCES medicine_inventory(medID),
     FOREIGN KEY (hWorkerID) REFERENCES worker(hWorkerID)
 );
 
@@ -150,23 +168,24 @@ CREATE TABLE prescription_receipt (
     CONSTRAINT prescription_pk PRIMARY KEY (receiptID),
     CONSTRAINT prescription_patient_fk FOREIGN KEY (patientID) REFERENCES patient(patientID),
     CONSTRAINT prescription_medconsult_fk FOREIGN KEY (consultationID) REFERENCES medical_consultation(consultationID),
-    CONSTRAINT prescription_medicine_fk FOREIGN KEY (medicineID) REFERENCES medicine_inventory(medicineID),
+    CONSTRAINT prescription_medicine_fk FOREIGN KEY (medicineID) REFERENCES medicine_inventory(medID),
     CONSTRAINT prescription_healthworker_fk FOREIGN KEY (workerID) REFERENCES worker(hWorkerID),
-    CONSTRAINT prescreceipt_qty_chk CHECK (quantityDistributed > 0));
+    CONSTRAINT prescreceipt_qty_chk CHECK (qtyDistributed > 0));
     
+-- RESTOCK INVOICE TRANSACTION RECORDS (Assigned to SPENCER) --
+CREATE TABLE restock_invoice (
+    invoiceID 		INT 			AUTO_INCREMENT,
+    supplierID 		INT 			NOT NULL,
+    purchaseOrderID INT 			NOT NULL UNIQUE,
+    deliveryDate 	DATE 			NOT NULL,
+    receivedBy 		VARCHAR(100) 	NOT NULL,
+    totalOrderCost 	DECIMAL(10,2) 	NOT NULL DEFAULT 0,
+    deliveryStatus 	ENUM('pending', 'ongoing', 'delivered') NOT NULL DEFAULT 'pending',
+    PRIMARY KEY (invoiceID),
+    FOREIGN KEY (supplierID) REFERENCES supplier(supplierID),
     
-# LINKING TABLES
-CREATE TABLE medicine_inventory (
-    inventoryID 		INT  		AUTO_INCREMENT,
-    medicineID 			INT  		NOT NULL,
-    batchNumber 		VARCHAR(50)	NOT NULL,
-    expiryDate 			DATE 		NOT NULL,
-    quantityInStock	 	INT 		NOT NULL,
-    supplierID 			INT 		NOT NULL,
-    inventoryStatusID 	INT 		NOT NULL,
-
-	CONSTRAINT inventory_pk PRIMARY KEY (inventoryID),
-    CONSTRAINT inventory_medicine_fk FOREIGN KEY (medicineID) REFERENCES medicine(medicineID),
-	CONSTRAINT inventory_supplier_fk FOREIGN KEY (supplierID) REFERENCES supplier(supplierID),
-    CONSTRAINT quantityInStock CHECK (quantityInStock >= 0));
+    CONSTRAINT check_valid_delivery_date CHECK (deliveryDate >= CURDATE()),
+    CONSTRAINT check_positive_order_cost CHECK (totalOrderCost >= 0),
+    CONSTRAINT check_positive_po_id CHECK (purchaseOrderID > 0)
+);
 
