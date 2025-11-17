@@ -111,6 +111,28 @@ CREATE TABLE immunization_administration (
 );
 
 
+-- MEDICAL CONSULTATIONS TRANSACTION RECORDS (Assigned to ASHLEY) --
+CREATE TABLE medical_consultation (
+    consultationID INT AUTO_INCREMENT,
+    patientID INT NOT NULL,
+    hWorkerID INT NOT NULL,
+    facilityID INT NOT NULL,
+    consultationDate DATE NOT NULL,
+    consultationTime TIME NOT NULL,
+    symptoms TEXT NOT NULL, 
+    diagnosis TEXT NOT NULL,
+    prescription TEXT,
+    consultationStatusID INT NOT NULL,
+    lastUpdated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    CONSTRAINT consultation_pk PRIMARY KEY (consultationID),
+    CONSTRAINT consultation_patient_fk FOREIGN KEY (patientID) REFERENCES patient(patientID),
+    CONSTRAINT consultation_worker_fk FOREIGN KEY (hWorkerID) REFERENCES worker(hWorkerID),
+    CONSTRAINT consultation_facility_fk FOREIGN KEY (facilityID) REFERENCES facility(facilityID),
+    CONSTRAINT consultation_status_fk FOREIGN KEY (consultationStatusID) REFERENCES REF_Status(StatusID),
+    CONSTRAINT consultation_dateCheck CHECK (consultationDate <= CURDATE())
+);
+
 -- PRESCRIPTION RECEIPT TRANSACTION RECORDS (Assigned to KHYLE) --
 CREATE TABLE prescription_receipt (
 	receiptID			 INT 	 AUTO_INCREMENT,
@@ -130,3 +152,20 @@ CREATE TABLE prescription_receipt (
     CONSTRAINT prescription_medicine_fk FOREIGN KEY (medicineID) REFERENCES medicine_inventory(medicineID),
     CONSTRAINT prescription_healthworker_fk FOREIGN KEY (workerID) REFERENCES worker(hWorkerID),
     CONSTRAINT prescreceipt_qty_chk CHECK (quantityDistributed > 0));
+    
+    
+# LINKING TABLES
+CREATE TABLE medicine_inventory (
+    inventoryID 		INT  		AUTO_INCREMENT,
+    medicineID 			INT  		NOT NULL,
+    batchNumber 		VARCHAR(50)	NOT NULL,
+    expiryDate 			DATE 		NOT NULL,
+    quantityInStock	 	INT 		NOT NULL,
+    supplierID 			INT 		NOT NULL,
+    inventoryStatusID 	INT 		NOT NULL,
+
+	CONSTRAINT inventory_pk PRIMARY KEY (inventoryID),
+    CONSTRAINT inventory_medicine_fk FOREIGN KEY (medicineID) REFERENCES medicine(medicineID),
+	CONSTRAINT inventory_supplier_fk FOREIGN KEY (supplierID) REFERENCES supplier(supplierID),
+    CONSTRAINT quantityInStock CHECK (quantityInStock >= 0));
+
