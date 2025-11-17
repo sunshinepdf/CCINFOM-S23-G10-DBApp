@@ -22,7 +22,7 @@ CREATE TABLE worker (
 	hWorkerPosition		VARCHAR(45)		NOT NULL,
 	hContactInformation	VARCHAR(11)		NOT NULL,
 	hWorkerStatusID INT NOT NULL,
-    FOREIGN KEY (hWorkerStatusID) REFERENCES REF_Status(StatusID),
+
     CONSTRAINT worker_pk PRIMARY KEY (hWorkerID),
     CONSTRAINT workerstatus_fk FOREIGN KEY (hWorkerStatusID) REFERENCES REF_Status(StatusID),
     CONSTRAINT workerfacility_fk FOREIGN KEY (facilityID) REFERENCES facility(facilityID),
