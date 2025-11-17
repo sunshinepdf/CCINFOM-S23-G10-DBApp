@@ -40,3 +40,44 @@ SELECT
 FROM facility f LEFT JOIN worker hw 		  	  ON f.facilityID = hw.facilityID
 				# TODO: add other joins once medicine inventory and facility link table is created 
 ORDER BY f.FacilityID;
+
+-- PATIENT CONSULTATIONS VIEW (Assigned to RAPHY) --
+CREATE VIEW patientConsultations_view AS
+SELECT 
+    p.patientID,
+    CONCAT(p.lastName, ', ', p.firstName) AS patientName,
+    p.birthDate,
+    p.gender,
+    p.bloodType,
+    p.address,
+    p.primaryPhone,
+    p.emergencyContact,
+    p.patientStatus,
+/* to be added
+    mc.consultationID,
+    mc.consultationDate,
+    mc.diagnosis,
+    mc.symptoms,
+    mc.prescription,
+    mc.status
+*/
+FROM patient p
+/*
+LEFT JOIN medical_consultation mc
+    ON p.patientID = mc.patientID;
+*/
+
+-- MEDICINE INVENTORY UTILIZATION REPORT (Assigned to RAPHY) --
+CREATE VIEW MedicineInventoryUtilization AS
+SELECT
+    f.facilityName,
+    DATE_FORMAT(pr.distributionDate, '%Y-%u') AS weekYear,
+    DATE_FORMAT(pr.distributionDate, '%Y-%m') AS monthYear,
+    YEAR(pr.distributionDate) AS year,
+    m.medicineName,
+    m.medicineType,
+    SUM(pr.qtyDistributed) AS totalDistributed
+FROM prescription_receipt pr
+JOIN facility f ON pr.facilityID = f.facilityID
+JOIN medicine m ON pr.medicineID = m.medicineID
+GROUP BY f.facilityName, weekYear, monthYear, year, m.medicineName, m.medicineType;
