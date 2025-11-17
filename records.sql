@@ -22,9 +22,6 @@ CREATE TABLE worker (
 	hWorkerPosition		VARCHAR(45)		NOT NULL,
 	hContactInformation	VARCHAR(11)		NOT NULL,
 	hWorkerStatusID INT NOT NULL,
-<<<<<<< Updated upstream
-    FOREIGN KEY (hWorkerStatusID) REFERENCES REF_Status(StatusID)
-=======
     FOREIGN KEY (hWorkerStatusID) REFERENCES REF_Status(StatusID),
     CONSTRAINT worker_pk PRIMARY KEY (hWorkerID),
     CONSTRAINT workerstatus_fk FOREIGN KEY (hWorkerStatusID) REFERENCES REF_Status(StatusID),
@@ -34,7 +31,6 @@ CREATE TABLE worker (
     CONSTRAINT worker_firstnameCheck CHECK (hWorkerFirstName REGEXP '^[A-Za-z]+$'),
     CONSTRAINT worker_positionCheck CHECK (hWorkerPosition REGEXP '^[A-Za-z ]+$'),  
     CONSTRAINT worker_contactCheck CHECK (hContactInformation REGEXP '^[0-9]{11}$')  
->>>>>>> Stashed changes
 );
 
 -- BRGY FACILITY RECORDS (Assigned to KHYLE) --
@@ -128,9 +124,6 @@ CREATE TABLE prescription_receipt (
     CONSTRAINT prescription_medconsult_fk FOREIGN KEY (consultationID) REFERENCES medical_consultation(consultationID),
     CONSTRAINT prescription_medicine_fk FOREIGN KEY (medicineID) REFERENCES medicine_inventory(medicineID),
     CONSTRAINT prescription_healthworker_fk FOREIGN KEY (workerID) REFERENCES worker(hWorkerID),
-<<<<<<< Updated upstream
-    CONSTRAINT prescreceipt_qty_chk CHECK (quantityDistributed > 0));
-=======
     CONSTRAINT prescreceipt_qty_chk CHECK (quantityDistributed > 0));
     
     
@@ -148,4 +141,4 @@ CREATE TABLE medicine_inventory (
     CONSTRAINT inventory_medicine_fk FOREIGN KEY (medicineID) REFERENCES medicine(medicineID),
 	CONSTRAINT inventory_supplier_fk FOREIGN KEY (supplierID) REFERENCES supplier(supplierID),
     CONSTRAINT quantityInStock CHECK (quantityInStock >= 0));
->>>>>>> Stashed changes
+
