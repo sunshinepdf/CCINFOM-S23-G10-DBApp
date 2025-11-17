@@ -22,7 +22,7 @@ CREATE TABLE worker (
 	hWorkerPosition		VARCHAR(45)		NOT NULL,
 	hContactInformation	VARCHAR(11)		NOT NULL,
 	hWorkerStatusID INT NOT NULL,
-
+    FOREIGN KEY (hWorkerStatusID) REFERENCES REF_Status(StatusID),
     CONSTRAINT worker_pk PRIMARY KEY (hWorkerID),
     CONSTRAINT workerstatus_fk FOREIGN KEY (hWorkerStatusID) REFERENCES REF_Status(StatusID),
     CONSTRAINT workerfacility_fk FOREIGN KEY (facilityID) REFERENCES facility(facilityID),
@@ -90,21 +90,48 @@ CREATE TABLE patient (
 
 # TRANSACTION RECORDS
 -- IMMUNIZATION ADMINISTRATION TRANSACTION RECORDS (Assigned to RAPHY) --
-/*inc
 CREATE TABLE immunization_administration (
-	immunizationID,
-    patientID,
-    vaccineID,
-    hWorkerID,
-    administrationDate,
-    vaccineType,
-    batchNumber,
-    dosageNumber,
-    nextVaccinationDate,
-    immunizationStatus,
-    sideEffects
+	immunizationID			INT 		AUTO_INCREMENT,
+    patientID 				INT			NOT NULL,
+    vaccineID				INT 		NOT NULL,
+    hWorkerID				INT 		NOT NULL,
+    administrationDate		DATE		NOT NULL,
+    vaccineType				VARCHAR(40)	NOT NULL,
+    batchNumber				INT,
+    dosageNumber 			INT			NOT NULL,
+    nextVaccinationDate 	DATE ,
+    immunizationStatus		ENUM('pending',
+								 'completed')
+										NOT NULL,
+    sideEffects				VARCHAR(100),
+    PRIMARY KEY (immunizationID),
+    FOREIGN KEY (patientID) REFERENCES patient(patientID),
+    FOREIGN KEY (vaccineID) REFERENCES medicine_inventory(medicineID),
+    FOREIGN KEY (hWorkerID) REFERENCES worker(hWorkerID)
 );
-*/
+
+
+-- MEDICAL CONSULTATIONS TRANSACTION RECORDS (Assigned to ASHLEY) --
+CREATE TABLE medical_consultation (
+    consultationID INT AUTO_INCREMENT,
+    patientID INT NOT NULL,
+    hWorkerID INT NOT NULL,
+    facilityID INT NOT NULL,
+    consultationDate DATE NOT NULL,
+    consultationTime TIME NOT NULL,
+    symptoms TEXT NOT NULL, 
+    diagnosis TEXT NOT NULL,
+    prescription TEXT,
+    consultationStatusID INT NOT NULL,
+    lastUpdated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    CONSTRAINT consultation_pk PRIMARY KEY (consultationID),
+    CONSTRAINT consultation_patient_fk FOREIGN KEY (patientID) REFERENCES patient(patientID),
+    CONSTRAINT consultation_worker_fk FOREIGN KEY (hWorkerID) REFERENCES worker(hWorkerID),
+    CONSTRAINT consultation_facility_fk FOREIGN KEY (facilityID) REFERENCES facility(facilityID),
+    CONSTRAINT consultation_status_fk FOREIGN KEY (consultationStatusID) REFERENCES REF_Status(StatusID),
+    CONSTRAINT consultation_dateCheck CHECK (consultationDate <= CURDATE())
+);
 
 -- PRESCRIPTION RECEIPT TRANSACTION RECORDS (Assigned to KHYLE) --
 CREATE TABLE prescription_receipt (
