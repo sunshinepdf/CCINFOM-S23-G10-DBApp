@@ -130,3 +130,20 @@ CREATE TABLE prescription_receipt (
     CONSTRAINT prescription_medicine_fk FOREIGN KEY (medicineID) REFERENCES medicine_inventory(medicineID),
     CONSTRAINT prescription_healthworker_fk FOREIGN KEY (workerID) REFERENCES worker(hWorkerID),
     CONSTRAINT prescreceipt_qty_chk CHECK (quantityDistributed > 0));
+    
+    
+# LINKING TABLES
+CREATE TABLE medicine_inventory (
+    inventoryID 		INT  		AUTO_INCREMENT,
+    medicineID 			INT  		NOT NULL,
+    batchNumber 		VARCHAR(50)	NOT NULL,
+    expiryDate 			DATE 		NOT NULL,
+    quantityInStock	 	INT 		NOT NULL,
+    supplierID 			INT 		NOT NULL,
+    inventoryStatusID 	INT 		NOT NULL,
+
+	CONSTRAINT inventory_pk PRIMARY KEY (inventoryID),
+    CONSTRAINT inventory_medicine_fk FOREIGN KEY (medicineID) REFERENCES medicine(medicineID),
+	CONSTRAINT inventory_supplier_fk FOREIGN KEY (supplierID) REFERENCES supplier(supplierID),
+    CONSTRAINT quantityInStock CHECK (quantityInStock >= 0));
+
