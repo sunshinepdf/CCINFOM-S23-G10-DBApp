@@ -111,6 +111,28 @@ CREATE TABLE immunization_administration (
 );
 
 
+-- MEDICAL CONSULTATIONS TRANSACTION RECORDS (Assigned to ASHLEY) --
+CREATE TABLE medical_consultation (
+    consultationID INT AUTO_INCREMENT,
+    patientID INT NOT NULL,
+    hWorkerID INT NOT NULL,
+    facilityID INT NOT NULL,
+    consultationDate DATE NOT NULL,
+    consultationTime TIME NOT NULL,
+    symptoms TEXT NOT NULL, 
+    diagnosis TEXT NOT NULL,
+    prescription TEXT,
+    consultationStatusID INT NOT NULL,
+    lastUpdated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    CONSTRAINT consultation_pk PRIMARY KEY (consultationID),
+    CONSTRAINT consultation_patient_fk FOREIGN KEY (patientID) REFERENCES patient(patientID),
+    CONSTRAINT consultation_worker_fk FOREIGN KEY (hWorkerID) REFERENCES worker(hWorkerID),
+    CONSTRAINT consultation_facility_fk FOREIGN KEY (facilityID) REFERENCES facility(facilityID),
+    CONSTRAINT consultation_status_fk FOREIGN KEY (consultationStatusID) REFERENCES REF_Status(StatusID),
+    CONSTRAINT consultation_dateCheck CHECK (consultationDate <= CURDATE())
+);
+
 -- PRESCRIPTION RECEIPT TRANSACTION RECORDS (Assigned to KHYLE) --
 CREATE TABLE prescription_receipt (
 	receiptID			 INT 	 AUTO_INCREMENT,
