@@ -85,7 +85,8 @@ CREATE TABLE patient (
     emergencyContact	VARCHAR(80)		NOT NULL,
     -- will edit
     patientStatus		ENUM('dead', 'alive')		NOT NULL,
-    PRIMARY KEY (patientID)
+    PRIMARY KEY (patientID),
+    CONSTRAINT patient_phoneCheck CHECK (primaryPhone REGEXP '^[0-9]{11}$')
 );
 
 # TRANSACTION RECORDS
