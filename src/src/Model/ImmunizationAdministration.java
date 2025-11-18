@@ -12,12 +12,12 @@ public class ImmunizationAdministration {
     private int dosageNumber;
     private Date nextVaccinationDate;
     private String sideEffects;
-    private int immunizationStatus;
+    private Status immunizationStatus;
 
     public ImmunizationAdministration(int immunizationID, int patientID, int medicineID,
                                       int hWorkerID, Date administrationDate, String vaccineType,
                                       int dosageNumber, Date nextVaccinationDate,
-                                      int immunizationStatus, String sideEffects) {
+                                      Status immunizationStatus, String sideEffects) {
         this.immunizationID = immunizationID;
         this.patientID = patientID;
         this.medicineID = medicineID;
@@ -103,11 +103,11 @@ public class ImmunizationAdministration {
         this.sideEffects = sideEffects;
     }
 
-    public int getImmunizationStatus() {
+    public Status getImmunizationStatus() {
         return immunizationStatus;
     }
 
-    public void setImmunizationStatus(int immunizationStatus) {
+    public void setImmunizationStatus(Status immunizationStatus) {
         this.immunizationStatus = immunizationStatus;
     }
 }

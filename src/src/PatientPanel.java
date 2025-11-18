@@ -39,7 +39,7 @@ public class PatientPanel extends JPanel {
         headerPanel.add(buttonPanel, BorderLayout.EAST);
 
         // table
-        String[] columns = {"ID", "Last Name", "First Name", "Birth Date", "Gender", "Blood Type", "Phone", "Status"};
+        String[] columns = {"ID", "Last Name", "First Name", "Birth Date", "Gender", "Blood Type", "Phone", "Model.Status"};
         tableModel = new DefaultTableModel(columns, 0);
         patientTable = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(patientTable);
@@ -55,7 +55,7 @@ public class PatientPanel extends JPanel {
 
     private void loadPatientData() {
         try {
-            List<Model.Patient> patients = patientCRUD.getAllPatients();
+            List<Model.Patient> patients = patientCRUD.getAll();
             tableModel.setRowCount(0); // clear data
 
             if (patients == null) {
@@ -73,7 +73,7 @@ public class PatientPanel extends JPanel {
                     patient.getGender().getLabel(),
                     patient.getBloodType().getLabel(),
                     patient.getPrimaryPhone(),
-                    patient.getPatientStatus().getLabel()
+                    patient.getPatientStatus()
                 });
             }
         } catch (SQLException e) {
@@ -102,7 +102,6 @@ public class PatientPanel extends JPanel {
             try {
                 int phoneNumber = Integer.parseInt(phoneField.getText().trim());
                 Model.Patient patient = new Model.Patient(
-                    0, // id 
                     lastNameField.getText(),
                     firstNameField.getText(),
                     new java.sql.Date(System.currentTimeMillis()), // current time
@@ -111,7 +110,7 @@ public class PatientPanel extends JPanel {
                     "", // address
                     phoneNumber,
                     "", // contact
-                    Model.Patient.PatientStatus.ALIVE
+                    // edit again, changed to Status object
                 );
                 patientCRUD.create(patient);
                 loadPatientData(); // refresh
