@@ -1,3 +1,26 @@
+-- MEDICINE DISTRIBUTION DETAILS VIEW (Assigned to SPENCER, Created by ASHLEY) --
+CREATE VIEW medicine_distribution_history AS
+SELECT
+    m.medicineID AS 'Medicine ID',
+    m.medicineName AS 'Medicine Name',
+    m.medicineDesc AS 'Description',
+    m.dosageForm AS 'Dosage Form',
+    m.strength AS 'Strength',
+    m.batchNumber AS 'Batch Number',
+    s.statusName AS 'Status',
+    pr.receiptID AS 'Distribution ID',
+    pr.distributionDate AS 'Distribution Date',
+    pr.qtyDistributed AS 'Quantity Distributed',
+    p.patientID AS 'Patient ID',
+    CONCAT(p.lastName, ', ', p.firstName) AS 'Patient Name',
+    p.birthDate AS 'Patient Birth Date',
+    p.gender AS 'Patient Gender',
+    p.address AS 'Patient Address'
+FROM medicine m
+JOIN REF_Status s ON m.medicineStatus = s.statusID
+LEFT JOIN prescription_receipt pr ON m.medicineID = pr.medicineID
+LEFT JOIN patient p ON pr.patientID = p.patientID;
+
 -- HEALTH WORKER DETAILS VIEW (Assigned to ASHLEY)  --
 CREATE VIEW healthworker_assigned_patients_view AS
 SELECT 
@@ -90,3 +113,4 @@ FROM immunization_administration ia
 JOIN patient p ON ia.patientID = p.patientID
 JOIN worker w ON ia.hWorkerID = w.hWorkerID
 JOIN medicine m ON ia.medicineID = m.medicineID;
+
