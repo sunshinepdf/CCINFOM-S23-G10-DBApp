@@ -376,9 +376,9 @@ BEGIN
     JOIN REF_Status s ON f.facilityStatusID = s.statusID
     WHERE f.facilityID = NEW.hWorkerFacilityID;
     
-    IF facility_status != 'Active' THEN
+    IF facility_status != 'Operational' THEN
         SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Worker can only be assigned to active facilities';
+        SET MESSAGE_TEXT = 'Worker can only be assigned to operational facilities';
     END IF;
 END$$
 DELIMITER ;
