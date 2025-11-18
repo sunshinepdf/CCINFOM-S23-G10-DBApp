@@ -6,14 +6,15 @@ SELECT
     WEEK(ia.administrationDate, 1) AS week,
     COUNT(DISTINCT ia.patientID) AS patientsImmunized,
     COUNT(DISTINCT ia.vaccineType) AS vaccinesUsed,
-    SUM(CASE WHEN ia.immunizationStatus = 'pending' THEN 1 ELSE 0 END) AS missedVaccinations,
+    SUM(CASE WHEN rs.statusName = 'Pending' THEN 1 ELSE 0 END) AS missedVaccinations,
     ROUND(
-        SUM(CASE WHEN ia.immunizationStatus = 'completed' THEN 1 ELSE 0 END) * 100.0 /
+        SUM(CASE WHEN rs.statusName = 'Completed' THEN 1 ELSE 0 END) * 100.0 /
         COUNT(ia.immunizationID), 2
     ) AS pctCompletedVaccinations
 FROM immunization_administration ia
 JOIN worker w ON ia.hWorkerID = w.hWorkerID
-JOIN facility f ON w.facilityID = f.facilityID
+JOIN facility f ON w.hWorkerFacilityID = f.facilityID
+JOIN REF_Status rs ON ia.immunizationStatus = rs.statusID
 GROUP BY f.facilityName, YEAR(ia.administrationDate), WEEK(ia.administrationDate, 1)
 ORDER BY f.facilityName, year, week;
 
@@ -24,14 +25,16 @@ SELECT
     MONTH(ia.administrationDate) AS month,
     COUNT(DISTINCT ia.patientID) AS patientsImmunized,
     COUNT(DISTINCT ia.vaccineType) AS vaccinesUsed,
-    SUM(CASE WHEN ia.immunizationStatus = 'pending' THEN 1 ELSE 0 END) AS missedVaccinations,
+    SUM(CASE WHEN rs.statusName = 'Pending' THEN 1 ELSE 0 END) AS missedVaccinations,
     ROUND(
-        SUM(CASE WHEN ia.immunizationStatus = 'completed' THEN 1 ELSE 0 END) * 100.0 /
+        SUM(CASE WHEN rs.statusName = 'Completed' THEN 1 ELSE 0 END) * 100.0 /
         COUNT(ia.immunizationID), 2
     ) AS pctCompletedVaccinations
+
 FROM immunization_administration ia
 JOIN worker w ON ia.hWorkerID = w.hWorkerID
-JOIN facility f ON w.facilityID = f.facilityID
+JOIN facility f ON w.hWorkerFacilityID = f.facilityID
+JOIN REF_Status rs ON ia.immunizationStatus = rs.statusID
 GROUP BY f.facilityName, YEAR(ia.administrationDate), MONTH(ia.administrationDate)
 ORDER BY f.facilityName, year, month;
 
@@ -41,16 +44,19 @@ SELECT
     YEAR(ia.administrationDate) AS year,
     COUNT(DISTINCT ia.patientID) AS patientsImmunized,
     COUNT(DISTINCT ia.vaccineType) AS vaccinesUsed,
-    SUM(CASE WHEN ia.immunizationStatus = 'pending' THEN 1 ELSE 0 END) AS missedVaccinations,
+    SUM(CASE WHEN rs.statusName = 'Pending' THEN 1 ELSE 0 END) AS missedVaccinations,
     ROUND(
-        SUM(CASE WHEN ia.immunizationStatus = 'completed' THEN 1 ELSE 0 END) * 100.0 /
+        SUM(CASE WHEN rs.statusName = 'Completed' THEN 1 ELSE 0 END) * 100.0 /
         COUNT(ia.immunizationID), 2
     ) AS pctCompletedVaccinations
+
 FROM immunization_administration ia
 JOIN worker w ON ia.hWorkerID = w.hWorkerID
-JOIN facility f ON w.facilityID = f.facilityID
+JOIN facility f ON w.hWorkerFacilityID = f.facilityID
+JOIN REF_Status rs ON ia.immunizationStatus = rs.statusID
 GROUP BY f.facilityName, YEAR(ia.administrationDate)
 ORDER BY f.facilityName, year;
+
 
 -- MEDICINE INVENTORY UTILIZATION REPORT (Assigned to RAPHY) --
 CREATE VIEW MedicineInventoryUtilization AS
@@ -73,3 +79,5 @@ LEFT JOIN prescription_receipt pr ON pr.medicineID = m.medicineID
 LEFT JOIN restock_invoice ri ON ri.supplierID - s.supplierID
 LEFT JOIN supplier s ON ri.supplierID - s.supplierID
 GROUP BY f.facilityName, m.medicineName, m.medicineType, weekYear, monthYear, year, s.supplierName, mi.quantityInStock;
+
+
