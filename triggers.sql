@@ -708,10 +708,10 @@ CREATE PROCEDURE sp_add_medicine(
 BEGIN
     DECLARE v_statusID INT;
     
-    -- Get 'Active' status ID
+    -- Get 'Available' status ID
     SELECT statusID INTO v_statusID 
     FROM REF_Status 
-    WHERE statusName = 'Active';
+    WHERE statusName = 'Available';
     
     INSERT INTO medicine (medicineName, medicineDesc, dosageForm, strength, batchNumber, medicineStatus)
     VALUES (p_medicineName, p_medicineDesc, p_dosageForm, p_strength, p_batchNumber, v_statusID);
