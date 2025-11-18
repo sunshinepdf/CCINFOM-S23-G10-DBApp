@@ -112,7 +112,7 @@ CREATE TABLE medicine_inventory (
 CREATE TABLE immunization_administration (
 	immunizationID			INT 		AUTO_INCREMENT,
     patientID 				INT			NOT NULL,
-    vaccineID				INT 		NOT NULL,
+    medID					INT 		NOT NULL,
     hWorkerID				INT 		NOT NULL,
     administrationDate		DATE		NOT NULL,
     vaccineType				VARCHAR(40)	NOT NULL,
@@ -125,7 +125,7 @@ CREATE TABLE immunization_administration (
     sideEffects				VARCHAR(100),
     PRIMARY KEY (immunizationID),
     FOREIGN KEY (patientID) REFERENCES patient(patientID),
-    FOREIGN KEY (vaccineID) REFERENCES medicine_inventory(medID),
+    FOREIGN KEY (medID) REFERENCES medicine_inventory(medID),
     FOREIGN KEY (hWorkerID) REFERENCES worker(hWorkerID)
 );
 
