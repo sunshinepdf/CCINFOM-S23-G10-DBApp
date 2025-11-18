@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS REF_StatusCategory (
     statusCategoryID INT AUTO_INCREMENT,
     categoryName VARCHAR(50) NOT NULL,
     
-    CONSTRAINT status_category_pk PRIMARY KEY (statusCategoryID)
+    CONSTRAINT status_category_pk PRIMARY KEY (statusCategoryID),
+    CONSTRAINT category_uq UNIQUE (categoryName)
 );
 
 CREATE TABLE IF NOT EXISTS REF_Status (
@@ -27,7 +28,7 @@ CREATE TABLE IF NOT EXISTS REF_Status (
     
 	CONSTRAINT status_reference_pk PRIMARY KEY (statusID),
     CONSTRAINT status_reference_category_fk FOREIGN KEY (statusCategoryID) REFERENCES REF_StatusCategory(statusCategoryID),
-    CONSTRAINT status_reference_uqname UNIQUE (statusName)
+    CONSTRAINT status_reference_uq UNIQUE (statusName, statusCategoryID)
 );
 
 
@@ -183,8 +184,7 @@ CREATE TABLE IF NOT EXISTS medical_consultation (
     CONSTRAINT consultation_patient_fk FOREIGN KEY (patientID) REFERENCES patient(patientID),
     CONSTRAINT consultation_worker_fk FOREIGN KEY (hWorkerID) REFERENCES worker(hWorkerID),
     CONSTRAINT consultation_facility_fk FOREIGN KEY (facilityID) REFERENCES facility(facilityID),
-    CONSTRAINT consultation_status_fk FOREIGN KEY (consultationStatusID) REFERENCES REF_Status(statusID),
-    CONSTRAINT consultation_dateCheck CHECK (consultationDate <= CURDATE())
+    CONSTRAINT consultation_status_fk FOREIGN KEY (consultationStatusID) REFERENCES REF_Status(statusID)
 );
 
 -- PRESCRIPTION RECEIPT TRANSACTION RECORDS (Assigned to KHYLE) --
@@ -194,7 +194,7 @@ CREATE TABLE IF NOT EXISTS prescription_receipt (
     consultationID 		 INT	 NOT NULL,
     medicineID			 INT 	 NOT NULL,
     hWorkerID			 INT	 NOT NULL,
-    distributionDate	 DATE,
+    distributionDate	 DATE	 NOT NULL,
     qtyDistributed 		 INT	 NOT NULL,
     isValidPrescription  BOOLEAN DEFAULT FALSE,
     inventoryUpdated	 BOOLEAN DEFAULT FALSE,
@@ -243,6 +243,5 @@ CREATE TABLE IF NOT EXISTS restock_invoice (
     CONSTRAINT invoice_receivedBy_fk FOREIGN KEY (receivedBy) REFERENCES worker(hWorkerID),
     CONSTRAINT invoice_status_fk FOREIGN KEY (deliveryStatus) REFERENCES REF_Status(statusID),
     CONSTRAINT invoice_po_id_uq UNIQUE (purchaseOrderID),
-    CONSTRAINT check_valid_delivery_date CHECK (deliveryDate >= CURDATE()),
     CONSTRAINT check_positive_order_cost CHECK (totalOrderCost >= 0)
 );
