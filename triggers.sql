@@ -695,7 +695,7 @@ DELIMITER ;
 DELIMITER $$
 CREATE PROCEDURE sp_restore_restock(IN id INT)
 BEGIN
-    UPDATE restock_invoice SET deliveryStatus = fn_getStatusID('Reopened','DeliveryStatus') WHERE invoiceID = id;
+    UPDATE restock_invoice SET deliveryStatus = fn_getStatusID('Pending','DeliveryStatus') WHERE invoiceID = id;
 END$$
 DELIMITER ;
 
