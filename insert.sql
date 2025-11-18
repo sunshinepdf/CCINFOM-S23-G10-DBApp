@@ -28,7 +28,7 @@ VALUES (1, 'Operational'), (1, 'Closed'), (1, 'Under Maintenance'),
        (7, 'Completed'), (7, 'Pending'), (7, 'Archived'),
 	   (8, 'Completed'), (8, 'Pending'), (8, 'Archived'),
        (9, 'Completed'), (9, 'Overdue'), (9, 'Archived'),
-       (10, 'Received'), (10, 'In Transit'), (10, 'Order Placed'), (10, 'Cancelled');
+       (10, 'Received'), (10, 'In Transit'), (10, 'Order Placed'), (10, 'Cancelled'), (10, 'Reopened');
        
 SELECT * FROM REF_Status 
 ORDER BY statusCategoryID, statusID;
