@@ -302,7 +302,6 @@ SET MESSAGE_TEXT = 'Health worker is not assigned to this facility';
 END IF;
 END$$
 DELIMITER ;
-
 -- ==========================================================
 -- PRESCRIPTION TRIGGERS
 -- ==========================================================
