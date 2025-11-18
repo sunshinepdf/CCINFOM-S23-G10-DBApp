@@ -122,7 +122,6 @@ FROM immunization_administration ia JOIN worker w ON ia.hWorkerID = w.hWorkerID
 GROUP BY f.facilityName, YEAR(ia.administrationDate)
 ORDER BY f.facilityName, year;
 
-
 -- MEDICINE INVENTORY UTILIZATION REPORT (Assigned to RAPHY) --
 CREATE VIEW MedicineInventoryUtilization AS
 SELECT
@@ -145,4 +144,45 @@ LEFT JOIN restock_invoice ri ON ri.supplierID - s.supplierID
 LEFT JOIN supplier s ON ri.supplierID - s.supplierID
 GROUP BY f.facilityName, m.medicineName, m.medicineType, weekYear, monthYear, year, s.supplierName, mi.quantityInStock;
 
+-- DISEASE MONITORING REPORT (Assigned to SPENCER, CREATED BY ASHLEY) --
+CREATE VIEW DiseaseCaseMonitoring_Week AS
+SELECT
+    f.facilityID,
+    f.facilityName,
+    YEAR(mc.consultationDate) AS year,
+    WEEK(mc.consultationDate, 1) AS week,
+    mc.diagnosis AS diseaseType,
+    COUNT(mc.consultationID) AS numberOfCases
+FROM medical_consultation mc
+JOIN facility f ON mc.facilityID = f.facilityID
+WHERE mc.diagnosis IS NOT NULL AND mc.diagnosis <> ''
+GROUP BY f.facilityID, f.facilityName, YEAR(mc.consultationDate), WEEK(mc.consultationDate, 1), mc.diagnosis
+ORDER BY f.facilityName, year, week, diseaseType;
+
+CREATE VIEW DiseaseCaseMonitoring_Month AS
+SELECT
+    f.facilityID,
+    f.facilityName,
+    YEAR(mc.consultationDate) AS year,
+    MONTH(mc.consultationDate) AS month,
+    mc.diagnosis AS diseaseType,
+    COUNT(mc.consultationID) AS numberOfCases
+FROM medical_consultation mc
+JOIN facility f ON mc.facilityID = f.facilityID
+WHERE mc.diagnosis IS NOT NULL AND mc.diagnosis <> ''
+GROUP BY f.facilityID, f.facilityName, YEAR(mc.consultationDate), MONTH(mc.consultationDate), mc.diagnosis
+ORDER BY f.facilityName, year, month, diseaseType;
+
+CREATE VIEW DiseaseCaseMonitoring_Year AS
+SELECT
+    f.facilityID,
+    f.facilityName,
+    YEAR(mc.consultationDate) AS year,
+    mc.diagnosis AS diseaseType,
+    COUNT(mc.consultationID) AS numberOfCases
+FROM medical_consultation mc
+JOIN facility f ON mc.facilityID = f.facilityID
+WHERE mc.diagnosis IS NOT NULL AND mc.diagnosis <> ''
+GROUP BY f.facilityID, f.facilityName, YEAR(mc.consultationDate), mc.diagnosis
+ORDER BY f.facilityName, year, diseaseType;
 
