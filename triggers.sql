@@ -264,9 +264,6 @@ FOR EACH ROW
 BEGIN
     DECLARE v_birth DATE;
     SELECT birthDate INTO v_birth FROM patient WHERE patientID = NEW.patientID;
-    IF NEW.consultationDate > CURDATE() THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Consultation date cannot be in the future';
-    END IF;
     IF NEW.consultationDate < v_birth THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Consultation date cannot be before patient birth date';
     END IF;
