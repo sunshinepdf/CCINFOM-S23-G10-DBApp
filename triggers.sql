@@ -101,7 +101,7 @@ BEGIN
 END$$
 DELIMITER ;
 
--- Prevent negative quantity
+-- Prevent negative stock quantities
 DELIMITER $$
 CREATE TRIGGER trg_inventory_quantity_update
 BEFORE UPDATE ON medicine_inventory
