@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS patient (
     emergencyContact	VARCHAR(80)		NOT NULL,
     patientStatus		INT				NOT NULL,
 	CONSTRAINT patient_pk PRIMARY KEY (patientID),
-    CONSTRAINT patient_phoneCheck CHECK (primaryPhone REGEXP '^[0-9]{11}$')
+    CONSTRAINT patient_phoneCheck CHECK (primaryPhone REGEXP '^[0-9]{11}$'),
 	CONSTRAINT patientstatus_fk FOREIGN KEY (patientStatus) REFERENCES REF_Status(statusID)
 );
 
