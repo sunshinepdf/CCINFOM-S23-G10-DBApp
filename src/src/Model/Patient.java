@@ -62,11 +62,12 @@ public class Patient {
     private String address;
     private int primaryPhone;
     private String emergencyContact;
-    private int patientStatus;
+    private Status patientStatus;
 
-    public Patient(String lastName, String firstName, Date birthDate, Gender gender,
+    public Patient(int patientID, String lastName, String firstName, Date birthDate, Gender gender,
                    BloodType bloodType, String address, int primaryPhone, String emergencyContact,
-                   int patientStatus) {
+                   Status patientStatus) {
+        this.patientID = patientID;
         this.lastName = lastName;
         this.firstName = firstName;
         this.birthDate = birthDate;
@@ -141,10 +142,10 @@ public class Patient {
         this.emergencyContact = emergencyContact;
     }
 
-    public int getPatientStatus() {
+    public Status getPatientStatus() {
         return patientStatus;
     }
-    public void setPatientStatus(int patientStatus) {
+    public void setPatientStatus(Status patientStatus) {
         this.patientStatus = patientStatus;
     }
 }

@@ -10,8 +10,9 @@ import java.util.List;
 public class ImmunizationAdministrationCRUD {
 
     private Connection conn = DBConnection.getConnection();
+    StatusDAO statusDAO = new StatusDAO(conn);
 
-    //CREATE
+    //create
     public void create(ImmunizationAdministration ia) throws SQLException{
         String sql = "INSERT INTO immunization_administration (patientID, medicineID, " +
                 "hWorkerID, administrationDate, vaccineType, dosageNumber, " +
@@ -26,19 +27,25 @@ public class ImmunizationAdministrationCRUD {
             pstmt.setString(5, ia.getVaccineType());
             pstmt.setInt(6, ia.getDosageNumber());
             pstmt.setDate(7, ia.getNextVaccinationDate());
-            pstmt.setInt(8, ia.getImmunizationStatus());
+            pstmt.setInt(8, ia.getImmunizationStatus().getStatusID());
             pstmt.setString(9, ia.getSideEffects());
 
             pstmt.executeUpdate();
         }
     }
 
-    //READ ALL
+    //read all
     public List<ImmunizationAdministration> readAll() throws SQLException{
         List<ImmunizationAdministration> list = new ArrayList<>();
         String sql = "SELECT * FROM immunization_administration";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql); ResultSet rs = pstmt.executeQuery()){
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()){
+
             while (rs.next()) {
+                int statusID = rs.getInt("immunizationStatus");
+                Status status = statusDAO.getStatusByID(statusID);
+
                 ImmunizationAdministration ia = new ImmunizationAdministration(
                         rs.getInt("immunizationID"),
                         rs.getInt("patientID"),
@@ -48,7 +55,7 @@ public class ImmunizationAdministrationCRUD {
                         rs.getString("vaccineType"),
                         rs.getInt("dosageNumber"),
                         rs.getDate("nextVaccinationDate"),
-                        rs.getInt("immunizationStatus"),
+                        status,
                         rs.getString("sideEffects")
                 );
                 list.add(ia);
@@ -57,7 +64,7 @@ public class ImmunizationAdministrationCRUD {
         return list;
     }
 
-    //UPDATE
+    //update
     public void update(ImmunizationAdministration ia) throws SQLException {
         String sql = "UPDATE immunization_administration SET patientID=?, medicineID=?, " +
                 "hWorkerID=?, administrationDate=?, vaccineType=?, dosageNumber=?, " +
@@ -72,7 +79,7 @@ public class ImmunizationAdministrationCRUD {
             pstmt.setString(5, ia.getVaccineType());
             pstmt.setInt(6, ia.getDosageNumber());
             pstmt.setDate(7, ia.getNextVaccinationDate());
-            pstmt.setInt(8, ia.getImmunizationStatus());
+            pstmt.setInt(8, ia.getImmunizationStatus().getStatusID());
             pstmt.setString(9, ia.getSideEffects());
             pstmt.setInt(10, ia.getImmunizationID());
 
@@ -80,7 +87,7 @@ public class ImmunizationAdministrationCRUD {
         }
     }
 
-    //DELETE
+    //delete
     public void delete(int id) throws SQLException {
         String sql = "DELETE FROM immunization_administration WHERE immunizationID=?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
