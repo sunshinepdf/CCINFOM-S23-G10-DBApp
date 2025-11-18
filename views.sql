@@ -61,31 +61,32 @@ SELECT
     p.primaryPhone,
     p.emergencyContact,
     p.patientStatus,
-/* to be added
     mc.consultationID,
     mc.consultationDate,
     mc.diagnosis,
     mc.symptoms,
     mc.prescription,
-    mc.status
-*/
+    mc.consultationStatusID
 FROM patient p
-/*
 LEFT JOIN medical_consultation mc
     ON p.patientID = mc.patientID;
-*/
 
--- MEDICINE INVENTORY UTILIZATION REPORT (Assigned to RAPHY) --
-CREATE VIEW MedicineInventoryUtilization AS
+-- IMMUNIZATION ADMINISTRATION VIEW (Assigned to RAPHY) --
+CREATE VIEW immunization_summary AS
 SELECT
-    f.facilityName,
-    DATE_FORMAT(pr.distributionDate, '%Y-%u') AS weekYear,
-    DATE_FORMAT(pr.distributionDate, '%Y-%m') AS monthYear,
-    YEAR(pr.distributionDate) AS year,
-    m.medicineName,
-    m.medicineType,
-    SUM(pr.qtyDistributed) AS totalDistributed
-FROM prescription_receipt pr
-JOIN facility f ON pr.facilityID = f.facilityID
-JOIN medicine m ON pr.medicineID = m.medicineID
-GROUP BY f.facilityName, weekYear, monthYear, year, m.medicineName, m.medicineType;
+    ia.immunizationID,
+    p.patientID,
+    CONCAT(p.lastName, ', ', p.firstName) AS patientName,
+    w.hWorkerID,
+    CONCAT(w.hWorkerLastName, ', ', w.hWorkerFirstName) AS workerName,
+    m.medicineID,
+    m.medicineName AS vaccineName,
+    ia.administrationDate,
+    ia.dosageNumber,
+    ia.nextVaccinationDate,
+    ia.immunizationStatus,
+    ia.sideEffects
+FROM immunization_administration ia
+JOIN patient p ON ia.patientID = p.patientID
+JOIN worker w ON ia.hWorkerID = w.hWorkerID
+JOIN medicine m ON ia.medicineID = m.medicineID;

@@ -56,13 +56,20 @@ ORDER BY f.facilityName, year;
 CREATE VIEW MedicineInventoryUtilization AS
 SELECT
     f.facilityName,
+    m.medicineName,
+    m.medicineType,
     DATE_FORMAT(pr.distributionDate, '%Y-%u') AS weekYear,
     DATE_FORMAT(pr.distributionDate, '%Y-%m') AS monthYear,
     YEAR(pr.distributionDate) AS year,
-    m.medicineName,
-    m.medicineType,
-    SUM(pr.qtyDistributed) AS totalDistributed
-FROM prescription_receipt pr
-JOIN facility f ON pr.facilityID = f.facilityID
-JOIN medicine m ON pr.medicineID = m.medicineID
-GROUP BY f.facilityName, weekYear, monthYear, year, m.medicineName, m.medicineType;
+    SUM(pr.qtyDistributed) AS totalDistributed,
+    mi.quantityInStock AS currentStock,
+    s.supplierName,
+    SUM(ri.totalOrderCost) AS totalRestockCost
+FROM medicine m
+JOIN medicine_inventory mi ON m.medicineID = mi.medicineID
+JOIN facility f ON mi.facilityID = f.facilityID
+LEFT JOIN prescription_receipt pr ON pr.medicineID = m.medicineID
+	AND pr.facilityID = f.facilityID
+LEFT JOIN restock_invoice ri ON ri.supplierID - s.supplierID
+LEFT JOIN supplier s ON ri.supplierID - s.supplierID
+GROUP BY f.facilityName, m.medicineName, m.medicineType, weekYear, monthYear, year, s.supplierName, mi.quantityInStock;
