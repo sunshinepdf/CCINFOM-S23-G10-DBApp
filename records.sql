@@ -94,6 +94,7 @@ CREATE TABLE IF NOT EXISTS patient (
     patientStatus		INT				NOT NULL,
 	CONSTRAINT patient_pk PRIMARY KEY (patientID),
     CONSTRAINT patient_phoneCheck CHECK (primaryPhone REGEXP '^[0-9]{11}$')
+	CONSTRAINT patientstatus_fk FOREIGN KEY (patientStatus) REFERENCES REF_Status(statusID)
 );
 
 -- SUPPLIER RECORDS (Assigned to KHYLE) --
@@ -146,7 +147,7 @@ CREATE TABLE IF NOT EXISTS medicine_inventory (
     quantityInStock  INT    NOT NULL,
     inventoryStatusID INT   NOT NULL,
 
-	 CONSTRAINT inventory_pk PRIMARY KEY (inventoryID),
+	CONSTRAINT inventory_pk PRIMARY KEY (inventoryID),
     CONSTRAINT inventory_facility_fk FOREIGN KEY (facilityID) REFERENCES facility(facilityID),
     CONSTRAINT inventory_medicine_fk FOREIGN KEY (medicineID) REFERENCES medicine(medicineID),
     CONSTRAINT inventory_status_fk FOREIGN KEY (inventoryStatusID) REFERENCES REF_Status(statusID),
@@ -245,6 +246,3 @@ CREATE TABLE IF NOT EXISTS restock_invoice (
     CONSTRAINT check_valid_delivery_date CHECK (deliveryDate >= CURDATE()),
     CONSTRAINT check_positive_order_cost CHECK (totalOrderCost >= 0)
 );
-
-
-
