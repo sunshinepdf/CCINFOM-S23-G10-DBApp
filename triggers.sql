@@ -182,7 +182,7 @@ DELIMITER ;
 -- ==========================================================
 DROP TRIGGER IF EXISTS trg_block_inactive_patient_consult;
 DROP TRIGGER IF EXISTS trg_block_inactive_worker_consult;
-DROP TRIGGER IF EXISTS trg_consultation_validate_date_insert$$;
+DROP TRIGGER IF EXISTS trg_consultation_validate_date_insert;
 DROP TRIGGER IF EXISTS trg_consult_hours;
 DROP TRIGGER IF EXISTS trg_consult_validate_date_birth;
 DROP TRIGGER IF EXISTS trg_consultation_validate_worker_insert;
