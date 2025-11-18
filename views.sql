@@ -21,6 +21,25 @@ JOIN REF_Status s ON m.medicineStatus = s.statusID
 LEFT JOIN prescription_receipt pr ON m.medicineID = pr.medicineID
 LEFT JOIN patient p ON pr.patientID = p.patientID;
 
+-- MEDICINE INVENTORY DETAILS VIEW (Assigned to SPENCER, Created by ASHLEY) --
+CREATE VIEW medicine_inventory_status AS
+SELECT
+    mi.inventoryID,
+    f.facilityID,
+    f.facilityName,
+    m.medicineID,
+    m.medicineName,
+    mi.quantityInStock,
+    rs_inv.statusName AS inventoryStatus,
+    CASE
+        WHEN mi.quantityInStock < 10 THEN 'Low'
+        ELSE 'OK'
+    END AS stockLevel
+FROM medicine_inventory mi
+JOIN REF_Status rs_inv ON mi.inventoryStatusID = rs_inv.statusID
+JOIN facility f ON mi.facilityID = f.facilityID
+JOIN medicine m ON mi.medicineID = m.medicineID;
+
 -- HEALTH WORKER DETAILS VIEW (Assigned to ASHLEY)  --
 CREATE VIEW healthworker_assigned_patients_view AS
 SELECT 
