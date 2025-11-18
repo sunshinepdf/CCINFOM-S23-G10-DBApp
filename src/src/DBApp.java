@@ -22,7 +22,7 @@ public class DBApp {
 
         // 5 core record management panels
         contentPanel.add(new DashboardPanel(userName, cardLayout, contentPanel), "DASHBOARD");
-        contentPanel.add(createPatientRecordsPanel(), "PATIENTS");
+        contentPanel.add(new PatientPanel(), "PATIENTS");
         contentPanel.add(createMedicineInventoryPanel(), "MEDICINE");
         contentPanel.add(createHealthWorkerRecordsPanel(), "WORKERS");
         contentPanel.add(createFacilityRecordsPanel(), "FACILITIES");
@@ -35,12 +35,6 @@ public class DBApp {
         mainFrame.add(contentPanel, BorderLayout.CENTER);
 
         mainFrame.setVisible(true);
-    }
-
-    private JPanel createPatientRecordsPanel() {
-        JPanel panel = new JPanel();
-        panel.add(new JLabel("Patient Records - Under Construction"));
-        return panel;
     }
 
     private JPanel createMedicineInventoryPanel() {
