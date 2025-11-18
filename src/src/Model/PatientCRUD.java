@@ -29,9 +29,9 @@ public class PatientCRUD {
         }
     }
 
-    /*
+    
     public List<Patient> getAllPatients() throws SQLException{
-        List<Patient> patients = new ArrayList<>();
+        /*List<Patient> patients = new ArrayList<>();
         String sql = "SELECT * FROM patient";
 
         try (Connection conn = DBConnection.getConnection();
@@ -43,11 +43,12 @@ public class PatientCRUD {
                 patients.add(p);
             }
         }
-        return patients;
+        return patients;*/
+        return null; // just testing gui
     }
 
     private Patient extractPatientFromResultSet(ResultSet rs) throws SQLException {
-        return new Patient(
+        /*return new Patient(
                 rs.getInt("patientID"),
                 rs.getString("lastName"),
                 rs.getString("firstName"),
@@ -58,10 +59,11 @@ public class PatientCRUD {
                 rs.getInt("primaryPhone"),
                 rs.getString("emergencyContact"),
                 Patient.PatientStatus.fromPatientStatus("patientStatus")
-        );
+        );*/
+        return null; // just testing gui 
     }
 
-     */
+     
 
     //UPDATE
     public void updatePatient(Patient p) throws SQLException {
