@@ -738,6 +738,6 @@ DELIMITER ;
 DELIMITER $$
 CREATE PROCEDURE sp_restore_supplier(IN id INT)
 BEGIN
-    UPDATE supplier SET supplierStatusID = fn_getStatusID('Operational','SupplierStatus') WHERE supplierID = id;
+    UPDATE supplier SET supplierStatusID = fn_getStatusID('Active','SupplierStatus') WHERE supplierID = id;
 END$$
 DELIMITER ;
