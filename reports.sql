@@ -1,24 +1,68 @@
 -- IMMUNIZATION IMPACT REPORT (Assigned to ASHLEY) --
+CREATE VIEW ImmunizationImpact_Week AS
 SELECT
     f.facilityName,
     YEAR(ia.administrationDate) AS year,
-    CASE 
-        WHEN :period = 'week' THEN WEEK(ia.administrationDate, 1)
-        WHEN :period = 'month' THEN MONTH(ia.administrationDate)
-        ELSE NULL
-    END AS period,
+    WEEK(ia.administrationDate, 1) AS week,
     COUNT(DISTINCT ia.patientID) AS patientsImmunized,
     COUNT(DISTINCT ia.vaccineType) AS vaccinesUsed,
-    SUM(CASE WHEN ia.immunizationStatus = 'pending' THEN 1 ELSE 0 END) AS missedVaccinations
+    SUM(CASE WHEN ia.immunizationStatus = 'pending' THEN 1 ELSE 0 END) AS missedVaccinations,
+    ROUND(
+        SUM(CASE WHEN ia.immunizationStatus = 'completed' THEN 1 ELSE 0 END) * 100.0 /
+        COUNT(ia.immunizationID), 2
+    ) AS pctCompletedVaccinations
 FROM immunization_administration ia
 JOIN worker w ON ia.hWorkerID = w.hWorkerID
 JOIN facility f ON w.facilityID = f.facilityID
-GROUP BY
+GROUP BY f.facilityName, YEAR(ia.administrationDate), WEEK(ia.administrationDate, 1)
+ORDER BY f.facilityName, year, week;
+
+CREATE VIEW ImmunizationImpact_Month AS
+SELECT
     f.facilityName,
-    YEAR(ia.administrationDate),
-    CASE 
-        WHEN :period = 'week' THEN WEEK(ia.administrationDate, 1)
-        WHEN :period = 'month' THEN MONTH(ia.administrationDate)
-        ELSE NULL
-    END
-ORDER BY f.facilityName, year, period;
+    YEAR(ia.administrationDate) AS year,
+    MONTH(ia.administrationDate) AS month,
+    COUNT(DISTINCT ia.patientID) AS patientsImmunized,
+    COUNT(DISTINCT ia.vaccineType) AS vaccinesUsed,
+    SUM(CASE WHEN ia.immunizationStatus = 'pending' THEN 1 ELSE 0 END) AS missedVaccinations,
+    ROUND(
+        SUM(CASE WHEN ia.immunizationStatus = 'completed' THEN 1 ELSE 0 END) * 100.0 /
+        COUNT(ia.immunizationID), 2
+    ) AS pctCompletedVaccinations
+FROM immunization_administration ia
+JOIN worker w ON ia.hWorkerID = w.hWorkerID
+JOIN facility f ON w.facilityID = f.facilityID
+GROUP BY f.facilityName, YEAR(ia.administrationDate), MONTH(ia.administrationDate)
+ORDER BY f.facilityName, year, month;
+
+CREATE VIEW ImmunizationImpact_Year AS
+SELECT
+    f.facilityName,
+    YEAR(ia.administrationDate) AS year,
+    COUNT(DISTINCT ia.patientID) AS patientsImmunized,
+    COUNT(DISTINCT ia.vaccineType) AS vaccinesUsed,
+    SUM(CASE WHEN ia.immunizationStatus = 'pending' THEN 1 ELSE 0 END) AS missedVaccinations,
+    ROUND(
+        SUM(CASE WHEN ia.immunizationStatus = 'completed' THEN 1 ELSE 0 END) * 100.0 /
+        COUNT(ia.immunizationID), 2
+    ) AS pctCompletedVaccinations
+FROM immunization_administration ia
+JOIN worker w ON ia.hWorkerID = w.hWorkerID
+JOIN facility f ON w.facilityID = f.facilityID
+GROUP BY f.facilityName, YEAR(ia.administrationDate)
+ORDER BY f.facilityName, year;
+
+-- MEDICINE INVENTORY UTILIZATION REPORT (Assigned to RAPHY) --
+CREATE VIEW MedicineInventoryUtilization AS
+SELECT
+    f.facilityName,
+    DATE_FORMAT(pr.distributionDate, '%Y-%u') AS weekYear,
+    DATE_FORMAT(pr.distributionDate, '%Y-%m') AS monthYear,
+    YEAR(pr.distributionDate) AS year,
+    m.medicineName,
+    m.medicineType,
+    SUM(pr.qtyDistributed) AS totalDistributed
+FROM prescription_receipt pr
+JOIN facility f ON pr.facilityID = f.facilityID
+JOIN medicine m ON pr.medicineID = m.medicineID
+GROUP BY f.facilityName, weekYear, monthYear, year, m.medicineName, m.medicineType;
