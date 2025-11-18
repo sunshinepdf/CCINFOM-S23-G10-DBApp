@@ -3,8 +3,6 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.SQLException;
 import java.util.List;
-import Model.Patient;
-import Model.PatientCRUD;
 
 public class PatientPanel extends JPanel {
     private JTable patientTable;
@@ -115,7 +113,7 @@ public class PatientPanel extends JPanel {
                     "", // contact
                     Model.Patient.PatientStatus.ALIVE
                 );
-                patientCRUD.createPatient(patient);
+                patientCRUD.create(patient);
                 loadPatientData(); // refresh
                 JOptionPane.showMessageDialog(this, "Patient added successfully!");
             } catch (SQLException e) {
@@ -142,7 +140,7 @@ public class PatientPanel extends JPanel {
         
         if (confirm == JOptionPane.YES_OPTION) {
             try {
-                patientCRUD.deletePatient(patientId);
+                patientCRUD.delete(patientId);
                 loadPatientData();
                 JOptionPane.showMessageDialog(this, "Patient deleted successfully");
             } catch (SQLException e) {

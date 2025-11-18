@@ -53,30 +53,6 @@ public class Patient {
         }
     }
 
-    public enum PatientStatus {
-        DEAD("Dead"), ALIVE("Alive");
-        private final String label;
-
-        PatientStatus(String label) {
-            this.label = label;
-        }
-
-        public String getLabel() {
-            return label;
-        }
-
-        public static PatientStatus fromPatientStatus(String value) {
-            for (PatientStatus p : PatientStatus.values()) {
-                if (p.getLabel().equalsIgnoreCase(value)) {
-                    return p;
-                }
-            }
-            return null;
-        }
-
-
-    }
-
     private int patientID;
     private String lastName;
     private String firstName;
@@ -86,12 +62,11 @@ public class Patient {
     private String address;
     private int primaryPhone;
     private String emergencyContact;
-    private PatientStatus patientStatus;
+    private int patientStatus;
 
-    public Patient(int patientID, String lastName, String firstName, Date birthDate, Gender gender,
+    public Patient(String lastName, String firstName, Date birthDate, Gender gender,
                    BloodType bloodType, String address, int primaryPhone, String emergencyContact,
-                   PatientStatus patientStatus) {
-        this.patientID = patientID;
+                   int patientStatus) {
         this.lastName = lastName;
         this.firstName = firstName;
         this.birthDate = birthDate;
@@ -166,10 +141,10 @@ public class Patient {
         this.emergencyContact = emergencyContact;
     }
 
-    public PatientStatus getPatientStatus() {
+    public int getPatientStatus() {
         return patientStatus;
     }
-    public void setPatientStatus(PatientStatus patientStatus) {
+    public void setPatientStatus(int patientStatus) {
         this.patientStatus = patientStatus;
     }
 }
