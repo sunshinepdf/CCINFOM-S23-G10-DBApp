@@ -4,31 +4,8 @@ import java.sql.Date;
 
 public class MedicineInventory {
 
-    public enum MedicineType {
-        MEDICINE("Medicine"), VACCINE("Vaccine");
-
-        private final String label;
-
-        MedicineType(String label) {
-            this.label = label;
-        }
-
-        public String getLabel() {
-            return label;
-        }
-
-        public static MedicineType fromLabel(String value) {
-            for (MedicineType type : MedicineType.values()) {
-                if (type.getLabel().equalsIgnoreCase(value)) {
-                    return type;
-                }
-            }
-            return null;
-        }
-    }
-
     public enum Status {
-        AVAILABLE("Available"), EXPIRED("Expired"), OUT_OF_STOCK("Out of Stock");
+        AVAILABLE("Available"), EXPIRED("Expired"), LOW_STOCK("Low Stock"), OUT_OF_STOCK("Out of Stock");
 
         private final String label;
 
@@ -50,34 +27,33 @@ public class MedicineInventory {
         }
     }
 
+    private int inventoryID;
+    private int facilityID;
     private int medicineID;
-    private String medicineName;
-    private MedicineType medicineType;
-    private String description;
     private int quantityInStock;
-    private Date expiryDate;
-    private Status status;
+    private Status inventoryStatusID;
 
-    public MedicineInventory(int medicineID, String medicineName, MedicineType medicineType, String description,
-                   int quantityInStock, Date expiryDate, Status status) {
+    public MedicineInventory(int inventoryID, int facilityID, int medicineID, int quantityInStock,
+                             Status inventoryStatusID) {
+        this.inventoryID = inventoryID;
+        this.facilityID = facilityID;
         this.medicineID = medicineID;
-        this.medicineName = medicineName;
-        this.medicineType = medicineType;
-        this.description = description;
         this.quantityInStock = quantityInStock;
-        this.expiryDate = expiryDate;
-        this.status = status;
+        this.inventoryStatusID = inventoryStatusID;
     }
 
-    public MedicineInventory(int medicineID, String medicineName, String medicineType, String description,
-                   int quantityInStock, Date expiryDate, String status) {
-        this.medicineID = medicineID;
-        this.medicineName = medicineName;
-        this.medicineType = MedicineType.fromLabel(medicineType);
-        this.description = description;
-        this.quantityInStock = quantityInStock;
-        this.expiryDate = expiryDate;
-        this.status = Status.fromLabel(status);
+    public int getInventoryID() {
+        return inventoryID;
+    }
+    public void setInventoryID(int inventoryID) {
+        this.inventoryID = inventoryID;
+    }
+
+    public int getFacilityID() {
+        return facilityID;
+    }
+    public void setFacilityID(int facilityID) {
+        this.facilityID = facilityID;
     }
 
     public int getMedicineID() {
@@ -87,27 +63,6 @@ public class MedicineInventory {
         this.medicineID = medicineID;
     }
 
-    public String getMedicineName() {
-        return medicineName;
-    }
-    public void setMedicineName(String medicineName) {
-        this.medicineName = medicineName;
-    }
-
-    public MedicineType getMedicineType() {
-        return medicineType;
-    }
-    public void setMedicineType(MedicineType medicineType) {
-        this.medicineType = medicineType;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
     public int getQuantityInStock() {
         return quantityInStock;
     }
@@ -115,17 +70,10 @@ public class MedicineInventory {
         this.quantityInStock = quantityInStock;
     }
 
-    public Date getExpiryDate() {
-        return expiryDate;
+    public Status getInventoryStatusID() {
+        return inventoryStatusID;
     }
-    public void setExpiryDate(Date expiryDate) {
-        this.expiryDate = expiryDate;
-    }
-
-    public Status getStatus() {
-        return status;
-    }
-    public void setStatus(Status status) {
-        this.status = status;
+    public void setInventoryStatusID(Status inventoryStatusID) {
+        this.inventoryStatusID = inventoryStatusID;
     }
 }
