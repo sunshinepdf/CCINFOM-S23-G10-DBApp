@@ -39,7 +39,7 @@ VALUES
 ('Barangay Health Center Bicutan', '119 Dona Soledad Avenue, Barangay 982, Paranaque City', '09190983123', '07:30:00', '16:30:00', 1),
 ('Barangay Health Center Taguig', '789 Mabini Street, Barangay 644, Taguig City', '09197860012', '08:30:00', '18:00:00', 1),
 ('Barangay Health Center Tondo', '189 Kalakal Street, Barangay 222, Tondo City', '09200111115', '09:00:00', '18:30:00', 1),
-('Barangay Health Center Pasay', '654 Harrison Road, Barangay 342, Pasay City', '092152862999', '06:30:00', '17:00:00', 1),
+('Barangay Health Center Pasay', '654 Harrison Road, Barangay 342, Pasay City', '09215286299', '06:30:00', '17:00:00', 1),
 ('Barangay Health Center Pasig', '987 Manalo Street, Barangay 109, Pasig City', '09221196524', '07:30:00', '16:30:00', 1),
 ('Barangay Health Center Aurora', '147 Ermitano Boulevard, Barangay 567, Aurora City', '09231969712', '08:00:00', '17:30:00', 2),
 ('Barangay Health Center Manila', '258 Roxas Avenue, Barangay 282, Manila City', '09240985672', '09:00:00', '18:00:00', 3),
@@ -92,7 +92,7 @@ VALUES	('Paracetamol', 'Analgesic and antipyretic used to treat pain and fever. 
 		('Omeprazole', 'Proton pump inhibitor that decreases the amount of acid produced in the stomach, used to treat gastroesophageal reflux disease.', 'Capsule', '20mg', 'OMEP2024-008', 8),
 		('Lagundi', 'Herbal medicine used as an expectorant to relieve cough and asthma, and for the symptomatic relief of common cold and flu.', 'Syrup', '600mg/5mL', 'LAGU2024-010', 8),
 		('BCG Vaccine', 'Bacillus Calmette-Guerin vaccine used to prevent tuberculosis, especially in children. Part of DOH Expanded Program on Immunization.', 'Injectable', '0.05mL', 'BCG2024-011', 8),
-		('Measles-Mumps-Rubella Vaccine', 'Combined vaccine that protects against measles, mumps, and rubella. Given as part of routine childhood immunization schedule.', 'Injectable', '0.5mL', 'MMR2024-012', 8),
+		('Measles-Mumps-Rubella Vaccine', 'Combined vaccine that protects against measles, mumps, and rubella. Given as part of routine childhood immunization schedule.', 'Injectable', '0.5mL', 'MMR2024-012', 8);
 
 INSERT INTO medicine_inventory (facilityID, medicineID, quantityInStock, inventoryStatusID) 
 VALUES	(1, 1, 500, 13),   

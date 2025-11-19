@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS patient (
 	address				VARCHAR(150)	NOT NULL,
     primaryPhone		CHAR(11)		NOT NULL,
     emergencyContact	VARCHAR(80)		NOT NULL,
-    patientStatus		INT				NOT NULL,
+    patientStatusID		INT				NOT NULL,
 	CONSTRAINT patient_pk PRIMARY KEY (patientID),
     CONSTRAINT patient_phoneCheck CHECK (primaryPhone REGEXP '^[0-9]{11}$'),
 	CONSTRAINT patientstatus_fk FOREIGN KEY (patientStatus) REFERENCES REF_Status(statusID)
@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS medicine (
 	dosageForm 			VARCHAR(50),
     strength 			VARCHAR(50),
 	batchNumber   		VARCHAR(50),
-    medicineStatus 		INT 			NOT NULL,
+    medicineStatusID 		INT 			NOT NULL,
     
     CONSTRAINT medicine_pk PRIMARY KEY (medicineID),
     CONSTRAINT medicinestatus_fk FOREIGN KEY (medicineStatus) REFERENCES REF_Status(statusID),
@@ -219,7 +219,7 @@ CREATE TABLE IF NOT EXISTS immunization_administration (
     vaccineType				VARCHAR(40)	NOT NULL,
     dosageNumber 			INT			NOT NULL,
     nextVaccinationDate 	DATE ,
-    immunizationStatus		INT			NOT NULL,
+    immunizationStatusID		INT			NOT NULL,
     sideEffects				VARCHAR(100),
     
     CONSTRAINT immunization_pk PRIMARY KEY (immunizationID),
