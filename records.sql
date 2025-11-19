@@ -72,8 +72,8 @@ CREATE TABLE IF NOT EXISTS worker (
     CONSTRAINT workerstatus_fk FOREIGN KEY (hWorkerStatusID) REFERENCES REF_Status(statusID),
     CONSTRAINT workerfacility_fk FOREIGN KEY (hWorkerFacilityID) REFERENCES facility(facilityID),
     CONSTRAINT worker_uqcontact UNIQUE (hContactInformation),
-    CONSTRAINT worker_lastnameCheck CHECK (hWorkerLastName REGEXP '^[A-Za-z]+$'),  
-    CONSTRAINT worker_firstnameCheck CHECK (hWorkerFirstName REGEXP '^[A-Za-z]+$'),
+    CONSTRAINT worker_lastnameCheck CHECK (hWorkerLastName REGEXP '^[A-Za-z ]+$'),  
+    CONSTRAINT worker_firstnameCheck CHECK (hWorkerFirstName REGEXP '^[A-Za-z ]+$'),
     CONSTRAINT worker_positionCheck CHECK (hWorkerPosition REGEXP '^[A-Za-z ]+$'),  
     CONSTRAINT worker_contactCheck CHECK (hContactInformation REGEXP '^[0-9]{11}$')
 );
