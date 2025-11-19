@@ -18,9 +18,7 @@ public class FacilityCRUD {
             pstmt.setString(3, facility.getContactNumber());
             pstmt.setTime(4, facility.getShiftStart());
             pstmt.setTime(5, facility.getShiftEnd());
-            
-            int statusID = convertStatusToID(facility.getFacilityStatus());
-            pstmt.setInt(6, statusID);
+            pstmt.setInt(6, facility.getFacilityStatus().getStatusID());
 
             pstmt.executeUpdate();
         }
@@ -38,6 +36,9 @@ public class FacilityCRUD {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
+                int statusID =  rs.getInt("facilityStatus");
+                Status status = StatusDAO.getStatusByID(conn,statusID);
+
                 Facility facility = new Facility(
                     rs.getInt("facilityID"),
                     rs.getString("facilityName"),
@@ -45,7 +46,7 @@ public class FacilityCRUD {
                     rs.getString("contactNumber"),
                     rs.getTime("shiftStart"),
                     rs.getTime("shiftEnd"),
-                    convertStatusNameToEnum(rs.getString("statusName"))
+                    status
                 );
                 facilities.add(facility);
             }
@@ -66,9 +67,7 @@ public class FacilityCRUD {
             pstmt.setString(3, facility.getContactNumber());
             pstmt.setTime(4, facility.getShiftStart());
             pstmt.setTime(5, facility.getShiftEnd());
-            
-            int statusID = convertStatusToID(facility.getFacilityStatus());
-            pstmt.setInt(6, statusID);
+            pstmt.setInt(6, facility.getFacilityStatus().getStatusID());
             pstmt.setInt(7, facility.getFacilityID());
 
             pstmt.executeUpdate();
@@ -107,6 +106,9 @@ public class FacilityCRUD {
             pstmt.setInt(1, facilityId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
+                    int  statusID = rs.getInt("statusID");
+                    Status  status = StatusDAO.getStatusByID(conn,statusID);
+
                     return new Facility(
                         rs.getInt("facilityID"),
                         rs.getString("facilityName"),
@@ -114,32 +116,11 @@ public class FacilityCRUD {
                         rs.getString("contactNumber"),
                         rs.getTime("shiftStart"),
                         rs.getTime("shiftEnd"),
-                        convertStatusNameToEnum(rs.getString("statusName"))
+                        status
                     );
                 }
             }
         }
         return null;
-    }
-
-    private int convertStatusToID(Facility.Status status) {
-        switch (status) {
-            case OPERATIONAL: return 1;       
-            case CLOSED: return 2;           
-            case UNDER_MAINTENANCE: return 3; 
-            default: return 1; 
-        }
-    }
-
-    private Facility.Status convertStatusNameToEnum(String statusName) {
-        if ("Operational".equalsIgnoreCase(statusName)) {
-            return Facility.Status.OPERATIONAL;
-        } else if ("Closed".equalsIgnoreCase(statusName)) {
-            return Facility.Status.CLOSED;
-        } else if ("Under Maintenance".equalsIgnoreCase(statusName)) {
-            return Facility.Status.UNDER_MAINTENANCE;
-        } else {
-            return Facility.Status.OPERATIONAL;
-        }
     }
 }

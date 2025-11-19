@@ -4,29 +4,6 @@ import java.sql.Date;
 
 public class HealthWorker {
 
-    public enum Status {
-        ACTIVE("Active"), INACTIVE("Inactive");
-
-        private final String label;
-
-        Status(String label) {
-            this.label = label;
-        }
-
-        public String getLabel() {
-            return label;
-        }
-
-        public static Status fromLabel(String value) {
-            for (Status status : Status.values()) {
-                if (status.getLabel().equalsIgnoreCase(value)) {
-                    return status;
-                }
-            }
-            return null;
-        }
-    }
-
     private int workerID;
     private int facilityID;
     private String lastName;
