@@ -6,7 +6,7 @@ import java.util.List;
 
 public class ConsultationCRUD {
 
-    private Connection conn = DBConnection.getConnection();
+    private Connection conn = DBConnection.connectDB();
     private FacilityCRUD facilityCRUD = new FacilityCRUD();  // for facility hours
     private StatusDAO statusDAO = new StatusDAO(conn);
 
