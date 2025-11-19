@@ -8,6 +8,13 @@ import Controller.PatientController;
 import Service.PatientService;
 
 import java.awt.*;
+import java.sql.Connection;
+import java.util.List;
+import java.util.Map;
+import javax.swing.SwingUtilities;
+
+import Model.DBConnection;
+import Model.ViewDAO;
     
 import Model.Patient; 
 
@@ -51,11 +58,13 @@ public class PatientPanel extends JPanel {
         JPanel buttonPanel = new JPanel(new FlowLayout());
         JButton addButton = new JButton("Add Patient");
         JButton editButton = new JButton("Edit Patient");
+        JButton viewButton = new JButton("View");
         JButton deleteButton = new JButton("Delete Patient");
         JButton refreshButton = new JButton("Refresh");
 
         buttonPanel.add(addButton);
         buttonPanel.add(editButton);
+        buttonPanel.add(viewButton);
         buttonPanel.add(deleteButton);
         buttonPanel.add(refreshButton);
 
@@ -87,6 +96,24 @@ public class PatientPanel extends JPanel {
         JScrollPane scrollPane = new JScrollPane(patientTable);
 
         addButton.addActionListener(e -> showAddPatientDialog());
+        viewButton.addActionListener(e -> {
+            showLoading(true);
+            new Thread(() -> {
+                try (Connection conn = DBConnection.getConnection()) {
+                    ViewDAO vdao = new ViewDAO(conn);
+                    List<Map<String, Object>> rows = vdao.getPatientConsultations();
+                    SwingUtilities.invokeLater(() -> {
+                        View.ViewDialog.showView(this, "Patient Consultations View", rows);
+                        showLoading(false);
+                    });
+                } catch (Exception ex) {
+                    SwingUtilities.invokeLater(() -> {
+                        showLoading(false);
+                        showError("Error loading view: " + ex.getMessage());
+                    });
+                }
+            }).start();
+        });
         refreshButton.addActionListener(e -> loadPatientData());
         deleteButton.addActionListener(e -> deleteSelectedPatient());
         editButton.addActionListener(e -> editSelectedPatient());

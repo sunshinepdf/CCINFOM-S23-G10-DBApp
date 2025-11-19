@@ -1,7 +1,6 @@
 package View;
 
 import javax.swing.BorderFactory;
-import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -12,6 +11,15 @@ import javax.swing.SwingConstants;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.sql.Connection;
+import java.util.List;
+import java.util.Map;
+import javax.swing.JButton;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+
+import Model.DBConnection;
+import Model.ViewDAO;
 
 public class DashboardPanel extends JPanel {
     private CardLayout cardLayout;
@@ -122,7 +130,7 @@ public class DashboardPanel extends JPanel {
         contentArea.setBackground(Color.WHITE);
 
         contentArea.add(createActivityPanel());
-        contentArea.add(createAlertsPanel());
+        contentArea.add(createReportsPanel());
 
         return contentArea;
     }
@@ -133,7 +141,7 @@ public class DashboardPanel extends JPanel {
         panel.setBackground(Color.WHITE);
 
         String[] activities = {
-            "gusto nyo ba to kasama"
+            "No updates"
         };
 
         DefaultListModel<String> listModel = new DefaultListModel<>();
@@ -150,39 +158,82 @@ public class DashboardPanel extends JPanel {
         return panel;
     }
     
-    private JPanel createAlertsPanel() {
+    private JPanel createReportsPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createTitledBorder("System Alerts & Notifications"));
+        panel.setBorder(BorderFactory.createTitledBorder("Reports"));
         panel.setBackground(Color.WHITE);
 
-        DefaultListModel<String> alertsModel = new DefaultListModel<>();
-        alertsModel.addElement("🔴 red");
-        alertsModel.addElement("🟡 orange");
-        alertsModel.addElement("🟢 green");
+        JPanel buttons = new JPanel(new GridLayout(0, 1, 8, 8));
 
-        JList<String> alertsList = new JList<>(alertsModel);
-        alertsList.setBackground(new Color(255, 250, 250));
-        alertsList.setFont(new Font("Arial", Font.PLAIN, 12));
-        
-        alertsList.setCellRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, 
-                    int index, boolean isSelected, boolean cellHasFocus) {
-                Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                String text = value.toString();
-                if (text.contains("🔴")) {
-                    c.setForeground(Color.RED);
-                    c.setFont(c.getFont().deriveFont(Font.BOLD));
-                } else if (text.contains("🟡")) {
-                    c.setForeground(Color.ORANGE);
-                } else if (text.contains("🟢")) {
-                    c.setForeground(Color.GREEN);
-                }
-                return c;
-            }
-        });
+        // Consultation summary buttons
+        JButton consWeek = new JButton("Consultation Summary - Week");
+        JButton consMonth = new JButton("Consultation Summary - Month");
+        JButton consYear = new JButton("Consultation Summary - Year");
 
-        panel.add(new JScrollPane(alertsList), BorderLayout.CENTER);
+        // Immunization impact
+        JButton immWeek = new JButton("Immunization Impact - Week");
+        JButton immMonth = new JButton("Immunization Impact - Month");
+        JButton immYear = new JButton("Immunization Impact - Year");
+
+        // Medicine inventory utilization
+        JButton utilWeek = new JButton("Medicine Inventory Utilization - Week");
+        JButton utilMonth = new JButton("Medicine Inventory Utilization - Month");
+        JButton utilYear = new JButton("Medicine Inventory Utilization - Year");
+
+        // Disease monitoring
+        JButton disWeek = new JButton("Disease Case Monitoring - Week");
+        JButton disMonth = new JButton("Disease Case Monitoring - Month");
+        JButton disYear = new JButton("Disease Case Monitoring - Year");
+
+        buttons.add(consWeek);
+        buttons.add(consMonth);
+        buttons.add(consYear);
+        buttons.add(immWeek);
+        buttons.add(immMonth);
+        buttons.add(immYear);
+        buttons.add(utilWeek);
+        buttons.add(utilMonth);
+        buttons.add(utilYear);
+        buttons.add(disWeek);
+        buttons.add(disMonth);
+        buttons.add(disYear);
+
+        panel.add(buttons, BorderLayout.CENTER);
+
+        // action helpers
+        consWeek.addActionListener(e -> fetchAndShow(v -> v.getConsultationSummaryWeek(), "Consultation Summary - Week"));
+        consMonth.addActionListener(e -> fetchAndShow(v -> v.getConsultationSummaryMonth(), "Consultation Summary - Month"));
+        consYear.addActionListener(e -> fetchAndShow(v -> v.getConsultationSummaryYear(), "Consultation Summary - Year"));
+
+        immWeek.addActionListener(e -> fetchAndShow(v -> v.getImmunizationImpactWeek(), "Immunization Impact - Week"));
+        immMonth.addActionListener(e -> fetchAndShow(v -> v.getImmunizationImpactMonth(), "Immunization Impact - Month"));
+        immYear.addActionListener(e -> fetchAndShow(v -> v.getImmunizationImpactYear(), "Immunization Impact - Year"));
+
+        utilWeek.addActionListener(e -> fetchAndShow(v -> v.getMedicineInventoryUtilizationWeek(), "Medicine Inventory Utilization - Week"));
+        utilMonth.addActionListener(e -> fetchAndShow(v -> v.getMedicineInventoryUtilizationMonth(), "Medicine Inventory Utilization - Month"));
+        utilYear.addActionListener(e -> fetchAndShow(v -> v.getMedicineInventoryUtilizationYear(), "Medicine Inventory Utilization - Year"));
+
+        disWeek.addActionListener(e -> fetchAndShow(v -> v.getDiseaseCaseMonitoringWeek(), "Disease Case Monitoring - Week"));
+        disMonth.addActionListener(e -> fetchAndShow(v -> v.getDiseaseCaseMonitoringMonth(), "Disease Case Monitoring - Month"));
+        disYear.addActionListener(e -> fetchAndShow(v -> v.getDiseaseCaseMonitoringYear(), "Disease Case Monitoring - Year"));
+
         return panel;
+    }
+
+    private interface ViewFetcher {
+        List<Map<String, Object>> fetch(ViewDAO dao) throws Exception;
+    }
+
+    private void fetchAndShow(ViewFetcher fetcher, String title) {
+        // Run DB call off-EDT
+        new Thread(() -> {
+            try (Connection conn = DBConnection.getConnection()) {
+                ViewDAO dao = new ViewDAO(conn);
+                List<Map<String, Object>> rows = fetcher.fetch(dao);
+                SwingUtilities.invokeLater(() -> View.ViewDialog.showView(this, title, rows));
+            } catch (Exception ex) {
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, "Error loading report: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE));
+            }
+        }).start();
     }
 }

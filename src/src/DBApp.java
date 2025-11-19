@@ -18,7 +18,6 @@ public class DBApp {
 
     private void initializeGUI(String userName) {
 
-        
         mainFrame = new JFrame("Barangay Health Monitoring System - Welcome, " + userName);
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainFrame.setSize(1400, 900);

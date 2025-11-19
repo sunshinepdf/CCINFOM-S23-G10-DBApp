@@ -8,7 +8,13 @@ import Controller.MedicineInventoryController;
 import Service.MedicineInventoryService;
 
 import java.awt.*;
+import java.sql.Connection;
 import java.util.List;
+import java.util.Map;
+import javax.swing.SwingUtilities;
+
+import Model.DBConnection;
+import Model.ViewDAO;
 import Model.MedicineInventory;
 
 public class MedicineInventoryPanel extends JPanel {
@@ -44,11 +50,13 @@ public class MedicineInventoryPanel extends JPanel {
         JPanel buttonPanel = new JPanel(new FlowLayout());
         JButton addButton = new JButton("Add Medicine");
         JButton editButton = new JButton("Edit Medicine");
+        JButton viewButton = new JButton("View");
         JButton deleteButton = new JButton("Delete Medicine");
         JButton refreshButton = new JButton("Refresh");
 
         buttonPanel.add(addButton);
         buttonPanel.add(editButton);
+        buttonPanel.add(viewButton);
         buttonPanel.add(deleteButton);
         buttonPanel.add(refreshButton);
 
@@ -85,6 +93,24 @@ public class MedicineInventoryPanel extends JPanel {
         JScrollPane scrollPane = new JScrollPane(medicineTable);
 
         addButton.addActionListener(e -> showAddMedicineDialog());
+        viewButton.addActionListener(e -> {
+            showLoading(true);
+            new Thread(() -> {
+                try (Connection conn = DBConnection.getConnection()) {
+                    ViewDAO vdao = new ViewDAO(conn);
+                    List<Map<String, Object>> rows = vdao.getMedicineInventoryStatus();
+                    SwingUtilities.invokeLater(() -> {
+                        View.ViewDialog.showView(this, "Medicine Inventory Status View", rows);
+                        showLoading(false);
+                    });
+                } catch (Exception ex) {
+                    SwingUtilities.invokeLater(() -> {
+                        showLoading(false);
+                        showError("Error loading view: " + ex.getMessage());
+                    });
+                }
+            }).start();
+        });
         refreshButton.addActionListener(e -> loadMedicineData());
         deleteButton.addActionListener(e -> deleteSelectedMedicine());
         editButton.addActionListener(e -> editSelectedMedicine());

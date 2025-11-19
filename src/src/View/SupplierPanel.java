@@ -5,6 +5,9 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.util.List;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.HashMap;
 import Model.Supplier;
 import Model.Status;
 import Controller.SupplierController;
@@ -41,11 +44,13 @@ public class SupplierPanel extends JPanel {
         JPanel buttonPanel = new JPanel(new FlowLayout());
         JButton addButton = new JButton("Add Supplier");
         JButton editButton = new JButton("Edit Supplier");
+        JButton viewButton = new JButton("View");
         JButton deleteButton = new JButton("Delete Supplier");
         JButton refreshButton = new JButton("Refresh");
 
         buttonPanel.add(addButton);
         buttonPanel.add(editButton);
+        buttonPanel.add(viewButton);
         buttonPanel.add(deleteButton);
         buttonPanel.add(refreshButton);
 
@@ -81,6 +86,38 @@ public class SupplierPanel extends JPanel {
         scrollPane.setPreferredSize(new Dimension(1300, 400));
 
         addButton.addActionListener(e -> showAddSupplierDialog());
+        viewButton.addActionListener(e -> {
+            showLoading(true);
+            controller.listSuppliers(res -> {
+                showLoading(false);
+                if (res.isSuccess()) {
+                    List<Model.Supplier> suppliers = res.getData();
+                    if (suppliers == null || suppliers.isEmpty()) {
+                        showInfo("No supplier data returned from database.");
+                        return;
+                    }
+                    List<Map<String, Object>> rows = new ArrayList<>();
+                    for (Model.Supplier s : suppliers) {
+                        Map<String, Object> m = new HashMap<>();
+                        m.put("Supplier ID", s.getSupplierID());
+                        m.put("Supplier Name", s.getSupplierName());
+                        m.put("Address", s.getAddress());
+                        m.put("Contact Details", s.getContactDetails());
+                        m.put("Supplier Type", s.getSupplierType());
+                        m.put("Delivery Lead Time (days)", s.getDeliveryLeadTime());
+                        m.put("Transaction Details", s.getTransactionDetails());
+                        m.put("Status", s.getSupplierStatus() != null ? s.getSupplierStatus().getLabel() : "");
+                        rows.add(m);
+                    }
+                    View.ViewDialog.showView(this, "Suppliers", rows);
+                } else {
+                    showError(res.getError());
+                }
+            }, ex -> {
+                showLoading(false);
+                showError(ex.getMessage());
+            });
+        });
         refreshButton.addActionListener(e -> loadSupplierData());
         deleteButton.addActionListener(e -> deleteSelectedSupplier());
         editButton.addActionListener(e -> editSelectedSupplier());

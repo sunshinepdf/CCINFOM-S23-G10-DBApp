@@ -4,6 +4,13 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import java.awt.*;
+import java.sql.Connection;
+import java.util.List;
+import java.util.Map;
+import javax.swing.SwingUtilities;
+
+import Model.DBConnection;
+import Model.ViewDAO;
 import Controller.HealthWorkerController;
 import Service.HealthWorkerService;
 import Model.HealthWorker;
@@ -50,11 +57,13 @@ public class HealthWorkerPanel extends JPanel {
         JPanel buttonPanel = new JPanel(new FlowLayout());
         JButton addButton = new JButton("Add Worker");
         JButton editButton = new JButton("Edit Worker");
+        JButton viewButton = new JButton("View");
         JButton deleteButton = new JButton("Delete Worker");
         JButton refreshButton = new JButton("Refresh");
 
         buttonPanel.add(addButton);
         buttonPanel.add(editButton);
+        buttonPanel.add(viewButton);
         buttonPanel.add(deleteButton);
         buttonPanel.add(refreshButton);
 
@@ -94,6 +103,24 @@ public class HealthWorkerPanel extends JPanel {
         scrollPane.setPreferredSize(new Dimension(1200, 400));
 
         addButton.addActionListener(e -> showAddWorkerDialog());
+        viewButton.addActionListener(e -> {
+            showLoading(true);
+            new Thread(() -> {
+                try (Connection conn = DBConnection.getConnection()) {
+                    ViewDAO vdao = new ViewDAO(conn);
+                    List<Map<String, Object>> rows = vdao.getHealthWorkerAssignedPatients();
+                    SwingUtilities.invokeLater(() -> {
+                        View.ViewDialog.showView(this, "Health Worker Assigned Patients", rows);
+                        showLoading(false);
+                    });
+                } catch (Exception ex) {
+                    SwingUtilities.invokeLater(() -> {
+                        showLoading(false);
+                        showError("Error loading view: " + ex.getMessage());
+                    });
+                }
+            }).start();
+        });
         refreshButton.addActionListener(e -> loadWorkerData());
         deleteButton.addActionListener(e -> deleteSelectedWorker());
         editButton.addActionListener(e -> editSelectedWorker());
