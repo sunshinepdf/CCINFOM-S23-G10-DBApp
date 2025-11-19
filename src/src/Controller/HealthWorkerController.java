@@ -1,7 +1,6 @@
 package Controller;
 
 import Service.HealthWorkerService;
-import Service.ServiceResult;
 import View.HealthWorkerPanel;
 import Model.HealthWorker;
 

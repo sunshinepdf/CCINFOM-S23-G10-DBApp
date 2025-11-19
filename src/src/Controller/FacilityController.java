@@ -1,7 +1,6 @@
 package Controller;
 
 import Service.FacilityService;
-import Service.ServiceResult;
 import View.FacilityPanel;
 import Model.Facility;
 

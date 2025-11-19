@@ -3,6 +3,7 @@ package Model;
 import java.sql.*;
 import javax.swing.table.DefaultTableModel;
 
+
 public class PrescriptionCRUD {
 
     private Connection conn;

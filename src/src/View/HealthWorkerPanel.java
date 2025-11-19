@@ -4,7 +4,6 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import java.awt.*;
-import java.util.List;
 import Controller.HealthWorkerController;
 import Service.HealthWorkerService;
 import Model.HealthWorker;

@@ -1,30 +1,34 @@
 package Service;
 
-import Model.MedicineInventoryCRUD;
-import Model.MedicineInventory;
+import Model.ImmunizationAdministration;
+import Model.ImmunizationAdministrationCRUD;
 import java.sql.SQLException;
 import java.util.List;
 
+public class ImmunizationAdministrationService {
+    private final ImmunizationAdministrationCRUD dao = new ImmunizationAdministrationCRUD();
 
-public class MedicineInventoryService {
-    private final MedicineInventoryCRUD dao;
-
-    public MedicineInventoryService() {
-        this.dao = new MedicineInventoryCRUD();
-    }
-
-    public ServiceResult<List<MedicineInventory>> listAll() {
+    public ServiceResult<List<ImmunizationAdministration>> listAll() {
         try {
-            List<MedicineInventory> list = dao.readAll();
+            List<ImmunizationAdministration> list = dao.readAll();
             return ServiceResult.ok(list);
         } catch (SQLException e) {
             return ServiceResult.fail(SqlErrorMapper.normalize(e));
         }
     }
 
-    public ServiceResult<Void> create(MedicineInventory m) {
+    public ServiceResult<Void> create(ImmunizationAdministration item) {
         try {
-            dao.create(m);
+            dao.create(item);
+            return ServiceResult.ok(null);
+        } catch (SQLException e) {
+            return ServiceResult.fail(SqlErrorMapper.normalize(e));
+        }
+    }
+
+    public ServiceResult<Void> update(ImmunizationAdministration item) {
+        try {
+            dao.update(item);
             return ServiceResult.ok(null);
         } catch (SQLException e) {
             return ServiceResult.fail(SqlErrorMapper.normalize(e));
@@ -34,15 +38,6 @@ public class MedicineInventoryService {
     public ServiceResult<Void> delete(int id) {
         try {
             dao.delete(id);
-            return ServiceResult.ok(null);
-        } catch (SQLException e) {
-            return ServiceResult.fail(SqlErrorMapper.normalize(e));
-        }
-    }
-
-    public ServiceResult<Void> updateAllStatuses() {
-        try {
-            dao.updateAllStatuses();
             return ServiceResult.ok(null);
         } catch (SQLException e) {
             return ServiceResult.fail(SqlErrorMapper.normalize(e));

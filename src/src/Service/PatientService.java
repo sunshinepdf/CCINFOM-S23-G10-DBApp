@@ -5,8 +5,6 @@ import Model.Patient;
 import java.sql.SQLException;
 import java.util.List;
 
-import Service.ServiceResult;
-import Service.SqlErrorMapper;
 
 public class PatientService {
     private final PatientCRUD dao;
