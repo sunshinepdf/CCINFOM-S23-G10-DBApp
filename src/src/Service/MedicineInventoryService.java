@@ -40,6 +40,15 @@ public class MedicineInventoryService {
         }
     }
 
+    public ServiceResult<Void> update(Model.MedicineInventory m) {
+        try {
+            dao.update(m);
+            return ServiceResult.ok(null);
+        } catch (SQLException e) {
+            return ServiceResult.fail(SqlErrorMapper.normalize(e));
+        }
+    }
+
     public ServiceResult<Void> updateAllStatuses() {
         try {
             dao.updateAllStatuses();
