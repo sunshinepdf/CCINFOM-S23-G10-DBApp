@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HealthWorkerCRUD {
-    private Connection conn = DBConnection.getConnection();
-    private StatusDAO statusDAO = new StatusDAO(conn);
 
     // create
     public void create(HealthWorker hw) throws SQLException {
@@ -14,7 +12,8 @@ public class HealthWorkerCRUD {
                 "position, contactInformation, statusID) " +
                 "VALUES(?,?,?,?,?,?)";
 
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, hw.getFacilityID());
             pstmt.setString(2, hw.getLastName());
             pstmt.setString(3, hw.getFirstName());
@@ -35,7 +34,8 @@ public class HealthWorkerCRUD {
                     "JOIN REF_Status s ON hw.statusID = s.statusID " +
                     "WHERE s.statusCategoryID = 2";
 
-        try (Statement stmt = conn.createStatement();
+        try (Connection conn = DBConnection.connectDB();
+             Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
@@ -60,7 +60,8 @@ public class HealthWorkerCRUD {
                 "position=?, contactInformation=?, statusID=? " +
                 "WHERE workerID=?";
         
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, hw.getFacilityID());
             pstmt.setString(2, hw.getLastName());
             pstmt.setString(3, hw.getFirstName());
@@ -79,7 +80,8 @@ public class HealthWorkerCRUD {
     public void softDelete(int workerId) throws SQLException {
         String sql = "UPDATE healthworker SET statusID = ? WHERE workerID = ?";
         
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, 5); 
             pstmt.setInt(2, workerId);
             pstmt.executeUpdate();
@@ -89,7 +91,8 @@ public class HealthWorkerCRUD {
     public void restore(int workerId) throws SQLException {
         String sql = "UPDATE healthworker SET statusID = ? WHERE workerID = ?";
         
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, 4);
             pstmt.setInt(2, workerId);
             pstmt.executeUpdate();
@@ -102,7 +105,8 @@ public class HealthWorkerCRUD {
                     "JOIN REF_Status s ON hw.statusID = s.statusID " +
                     "WHERE hw.workerID = ? AND s.statusCategoryID = 2";
         
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, workerId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
@@ -127,7 +131,8 @@ public class HealthWorkerCRUD {
                     "JOIN REF_Status s ON hw.statusID = s.statusID " +
                     "WHERE hw.facilityID = ? AND s.statusCategoryID = 2";
         
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, facilityId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
