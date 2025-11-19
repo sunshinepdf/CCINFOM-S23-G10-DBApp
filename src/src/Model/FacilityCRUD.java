@@ -36,14 +36,14 @@ public class FacilityCRUD {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                int statusID =  rs.getInt("facilityStatus");
+                int statusID =  rs.getInt("facilityStatusID");
                 Status status = StatusDAO.getStatusByID(conn,statusID);
 
                 Facility facility = new Facility(
                     rs.getInt("facilityID"),
                     rs.getString("facilityName"),
-                    rs.getString("address"),
-                    rs.getString("contactNumber"),
+                    rs.getString("facilityAddress"),
+                    rs.getString("facilityContactNum"),
                     rs.getTime("shiftStart"),
                     rs.getTime("shiftEnd"),
                     status
@@ -107,13 +107,13 @@ public class FacilityCRUD {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     int statusID =  rs.getInt("facilityStatusID");
-                    Status  status = StatusDAO.getStatusByID(conn,statusID);
+                    Status status = StatusDAO.getStatusByID(conn, statusID);
 
                     return new Facility(
                         rs.getInt("facilityID"),
                         rs.getString("facilityName"),
-                        rs.getString("address"),
-                        rs.getString("contactNumber"),
+                        rs.getString("facilityAddress"),
+                        rs.getString("facilityContactNum"),
                         rs.getTime("shiftStart"),
                         rs.getTime("shiftEnd"),
                         status

@@ -252,7 +252,7 @@ public class PatientPanel extends JPanel {
         
         if (result == JOptionPane.OK_OPTION) {
             try {
-                int phoneNumber = Integer.parseInt(phoneField.getText().trim());
+                String phoneNumber = phoneField.getText().trim();
                 java.sql.Date birthDate = java.sql.Date.valueOf(birthDateField.getText());
                 
                 Patient patient = new Patient(

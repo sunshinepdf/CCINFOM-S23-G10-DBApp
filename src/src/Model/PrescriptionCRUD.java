@@ -7,7 +7,9 @@ import javax.swing.table.DefaultTableModel;
 public class PrescriptionCRUD {
 
     private Connection conn;
-    private static final int ARCHIVED_STATUS_ID = 8; // PrescriptionStatus 'Archived'
+    // private static final int COMPLETED_STATUS_ID = 20;   
+    // private static final int PENDING_STATUS_ID = 21;    
+    private static final int ARCHIVED_STATUS_ID = 22;  
 
     public PrescriptionCRUD(Connection conn) {
         this.conn = conn;
@@ -110,5 +112,29 @@ public class PrescriptionCRUD {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public Prescription getPrescriptionById(int receiptID) throws SQLException {
+        String sql = "SELECT * FROM prescription_receipt WHERE receiptID = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, receiptID);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Prescription(
+                        rs.getInt("receiptID"),
+                        rs.getInt("patientID"),
+                        rs.getInt("consultationID"),
+                        rs.getInt("medicineID"),
+                        rs.getInt("hWorkerID"),
+                        rs.getDate("distributionDate"),
+                        rs.getInt("qtyDistributed"),
+                        rs.getBoolean("isValidPrescription"),
+                        rs.getBoolean("inventoryUpdated"),
+                        rs.getInt("prescriptionStatusID")
+                    );
+                }
+            }
+        }
+        return null;
     }
 }

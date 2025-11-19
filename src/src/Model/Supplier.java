@@ -11,12 +11,12 @@ public class Supplier {
     private String transactionDetails;
     private Status supplierStatus;
 
-    public Supplier(int supplierID, String supplierName, String address, String contactDetails,
+    public Supplier(int supplierID, String supplierName, String supplierAddress, String supplierContactNum,
                    String supplierType, int deliveryLeadTime, String transactionDetails, Status supplierStatus) {
         this.supplierID = supplierID;
         this.supplierName = supplierName;
-        this.address = address;
-        this.contactDetails = contactDetails;
+        this.address = supplierAddress;
+        this.contactDetails = supplierContactNum;
         this.supplierType = supplierType;
         this.deliveryLeadTime = deliveryLeadTime;
         this.transactionDetails = transactionDetails;
