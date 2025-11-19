@@ -62,6 +62,11 @@ public class RestockInvoicePanel extends JPanel {
         table = new JTable(tableModel);
         setColumnWidths();
 
+        table.setFont(new Font("Arial", Font.PLAIN, 14));
+        table.setRowHeight(25);
+        table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
         JPanel northPanel = new JPanel(new BorderLayout());
         northPanel.add(header, BorderLayout.NORTH);
         northPanel.add(searchPanel, BorderLayout.SOUTH);
