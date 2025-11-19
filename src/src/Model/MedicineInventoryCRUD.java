@@ -27,19 +27,18 @@ public class MedicineInventoryCRUD {
 
     //create
     public void create(MedicineInventory m) throws SQLException{
-        String sql = "INSERT INTO medicines(medicine_name, medicine_type, description, " +
-                "quantity_in_stock, expiry_date, status) " +
-                "VALUES(?,?,?,?,?,?)";
+        String sql = "INSERT INTO medicine_inventory(facilityID, medicineID, quantityInStock, " +
+                "inventoryStatusID) " +
+                "VALUES(?,?,?,?)";
         //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
         try (Connection conn = DBConnection.connectDB();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, m.getMedicineName());
-            pstmt.setString(2, m.getMedicineType().getLabel());
-            pstmt.setString(3, m.getDescription());
-            pstmt.setInt(4, m.getQuantityInStock());
-            pstmt.setDate(5, m.getExpiryDate());
-            String calculatedStatus = calculateStatus(m.getQuantityInStock(), m.getExpiryDate());
-            pstmt.setString(6, calculatedStatus);
+
+            pstmt.setInt(1, m.getFacilityID());
+            pstmt.setInt(2, m.getMedicineID());
+            pstmt.setInt(3, m.getQuantityInStock());
+            int statusID = convertStatusToID(m.getInventoryStatusID());
+            pstmt.setInt(9, statusID);
 
             pstmt.executeUpdate();
         }
@@ -48,7 +47,7 @@ public class MedicineInventoryCRUD {
     //read all
     public List<MedicineInventory> readAll() throws SQLException{
         List<MedicineInventory> medicines = new ArrayList<>();
-        String sql = "SELECT * FROM medicines";
+        String sql = "SELECT * FROM medicine_inventory";
 
          //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
         try (Connection conn = DBConnection.connectDB();
@@ -57,13 +56,11 @@ public class MedicineInventoryCRUD {
 
             while (rs.next()) {
                 MedicineInventory m = new MedicineInventory(
-                    rs.getInt("medicine_id"),
-                    rs.getString("medicine_name"),
-                    MedicineInventory.MedicineType.fromLabel(rs.getString("medicine_type")),
-                    rs.getString("description"),
-                    rs.getInt("quantity_in_stock"),
-                    rs.getDate("expiry_date"),
-                    MedicineInventory.Status.fromLabel(rs.getString("status"))
+                    rs.getInt("inventoryID"),
+                    rs.getInt("facilityID"),
+                    rs.getInt("medicineID"),
+                    rs.getInt("quantityInStock"),
+                    convertStatusNameToEnum(rs.getString("statusName"))
                 );
                 medicines.add(m);
             }
@@ -80,14 +77,12 @@ public class MedicineInventoryCRUD {
         //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
         try (Connection conn = DBConnection.connectDB();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, m.getMedicineName());
-            pstmt.setString(2, m.getMedicineType().getLabel());
-            pstmt.setString(3, m.getDescription());
-            pstmt.setInt(4, m.getQuantityInStock());
-            pstmt.setDate(5, m.getExpiryDate());
-            String calculatedStatus = calculateStatus(m.getQuantityInStock(), m.getExpiryDate());
-            pstmt.setString(6, calculatedStatus);
-            pstmt.setInt(7, m.getMedicineID());
+            pstmt.setInt(1, m.getFacilityID());
+            pstmt.setInt(2, m.getMedicineID());
+            pstmt.setInt(3, m.getQuantityInStock());
+            int statusID = convertStatusToID(m.getInventoryStatusID());
+            pstmt.setInt(9, statusID);
+            pstmt.setInt(7, m.getInventoryID());
 
             pstmt.executeUpdate();
         }
@@ -105,17 +100,27 @@ public class MedicineInventoryCRUD {
         }
     }
 
-    public void updateAllStatuses() throws SQLException {
-        String sql = "UPDATE medicines SET status = CASE " +
-                    "WHEN expiry_date < CURDATE() THEN 'Expired' " +
-                    "WHEN quantity_in_stock = 0 THEN 'Out of Stock' " +
-                    "WHEN quantity_in_stock <= 10 THEN 'Low Stock' " +
-                    "ELSE 'Available' END";
-                    
-         //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
-        try (Connection conn = DBConnection.connectDB();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.executeUpdate();
+    private int convertStatusToID(MedicineInventory.Status status) {
+        switch (status) {
+            case AVAILABLE: return 13;
+            case EXPIRED: return 14;
+            case LOW_STOCK: return 15;
+            case OUT_OF_STOCK: return 16;
+            default: return 16;
+        }
+    }
+
+    private MedicineInventory.Status convertStatusNameToEnum(String statusName) {
+        if ("Available".equalsIgnoreCase(statusName)) {
+            return MedicineInventory.Status.AVAILABLE;
+        } else if ("Expired".equalsIgnoreCase(statusName)) {
+            return MedicineInventory.Status.EXPIRED;
+        } else if ("Low Stock".equalsIgnoreCase(statusName)) {
+            return MedicineInventory.Status.LOW_STOCK;
+        } else if ("Out of Stock".equalsIgnoreCase(statusName)) {
+            return MedicineInventory.Status.OUT_OF_STOCK;
+        }else {
+            return MedicineInventory.Status.OUT_OF_STOCK;
         }
     }
 }
