@@ -80,6 +80,7 @@ public class PatientPanel extends JPanel {
         patientTable = new JTable(tableModel);
 
         setColumnWidths();
+        patientTable.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
         Font largerFont = new Font("Arial", Font.PLAIN, 14); 
         patientTable.setRowHeight(25);
         patientTable.setFont(largerFont);
