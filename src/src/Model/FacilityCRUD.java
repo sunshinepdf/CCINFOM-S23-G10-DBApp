@@ -106,7 +106,7 @@ public class FacilityCRUD {
             pstmt.setInt(1, facilityId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    int  statusID = rs.getInt("statusID");
+                    int statusID =  rs.getInt("facilityStatusID");
                     Status  status = StatusDAO.getStatusByID(conn,statusID);
 
                     return new Facility(
