@@ -134,3 +134,30 @@ FROM immunization_administration ia
 JOIN patient p ON ia.patientID = p.patientID
 JOIN worker w ON ia.hWorkerID = w.hWorkerID
 JOIN medicine m ON ia.medicineID = m.medicineID;
+
+-- MEDICINE WITH INVENTORY VIEW --
+CREATE VIEW medicine_with_inventory_view AS
+SELECT
+    m.medicineID AS 'Medicine ID',
+    m.medicineName AS 'Medicine Name',
+    m.medicineDesc AS 'Description',
+    m.dosageForm AS 'Dosage Form',
+    m.strength AS 'Strength',
+    m.batchNumber AS 'Batch Number',
+    ms.statusName AS 'Medicine Status',
+    mi.inventoryID AS 'Inventory ID',
+    f.facilityID AS 'Facility ID',
+    f.facilityName AS 'Facility Name',
+    mi.quantityInStock AS 'Quantity In Stock',
+    mis.statusName AS 'Inventory Status',
+    CASE
+        WHEN mi.quantityInStock = 0 THEN 'Out of Stock'
+        WHEN mi.quantityInStock < 10 THEN 'Low Stock'
+        WHEN mi.quantityInStock < 50 THEN 'Adequate'
+        ELSE 'Well Stocked'
+    END AS 'Stock Level'
+FROM medicine m JOIN REF_Status ms ON m.medicineStatusID = ms.statusID
+				LEFT JOIN medicine_inventory mi ON m.medicineID = mi.medicineID
+				LEFT JOIN facility f ON mi.facilityID = f.facilityID
+				LEFT JOIN REF_Status mis ON mi.inventoryStatusID = mis.statusID
+ORDER BY m.medicineID, f.facilityID;

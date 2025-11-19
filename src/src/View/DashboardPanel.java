@@ -1,6 +1,5 @@
 package View;
 
-import javax.swing.*;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
@@ -73,6 +72,8 @@ public class DashboardPanel extends JPanel {
         statsPanel.add(createStatCard("Facilities", "number", Color.MAGENTA, "[F]", "FACILITIES"));
         statsPanel.add(createStatCard("Suppliers", "number", Color.CYAN, "[S]", "SUPPLIERS"));
         statsPanel.add(createStatCard("Low Stock Items", "number", Color.RED, "[!]", "MEDICINE"));
+
+        // Transaction quick-links are available in the sidebar; removed from dashboard cards
 
         return statsPanel;
     }

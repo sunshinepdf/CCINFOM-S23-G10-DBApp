@@ -25,13 +25,19 @@ public class DBApp {
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout);
 
-        // 5 core record management panels
+        // core record management panels
         contentPanel.add(new DashboardPanel(userName, cardLayout, contentPanel), "DASHBOARD");
         contentPanel.add(new PatientPanel(), "PATIENTS");
         contentPanel.add(new MedicineInventoryPanel(), "MEDICINE");
         contentPanel.add(new HealthWorkerPanel(), "WORKERS");
         contentPanel.add(new FacilityPanel(), "FACILITIES");
         contentPanel.add(new SupplierPanel(), "SUPPLIERS");
+
+        // transaction panels
+        contentPanel.add(new PrescriptionPanel(), "PRESCRIPTIONS");
+        contentPanel.add(new RestockInvoicePanel(), "RESTOCK");
+        contentPanel.add(new ImmunizationAdministrationPanel(), "IMMUNIZATION");
+        contentPanel.add(new ConsultationPanel(), "CONSULTATIONS");
 
         JPanel sidebar = createSidebar();
 
@@ -49,23 +55,31 @@ public class DBApp {
     sidebar.setPreferredSize(new Dimension(250, 0));
     sidebar.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10));
 
-    // core records menu buttons
+    // core records + transactions menu buttons
     String[] menuItems = {
-        "Dashboard", 
-        "Patient Records", 
-        "Medicine Inventory", 
+        "Dashboard",
+        "Patient Records",
+        "Medicine Inventory",
         "Health Worker Records",
-        "Facility Records", 
-        "Supplier Records"
+        "Facility Records",
+        "Supplier Records",
+        "Prescription Transactions",
+        "Restock Invoices",
+        "Immunization Administration",
+        "Consultation Transactions"
     };
 
     String[] cardNames = {
-        "DASHBOARD", 
-        "PATIENTS", 
-        "MEDICINE", 
+        "DASHBOARD",
+        "PATIENTS",
+        "MEDICINE",
         "WORKERS",
-        "FACILITIES", 
-        "SUPPLIERS"
+        "FACILITIES",
+        "SUPPLIERS",
+        "PRESCRIPTIONS",
+        "RESTOCK",
+        "IMMUNIZATION",
+        "CONSULTATIONS"
     };
 
     for (int i = 0; i < menuItems.length; i++) {

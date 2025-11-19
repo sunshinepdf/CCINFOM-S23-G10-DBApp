@@ -6,9 +6,7 @@ import java.util.List;
 
 public class ConsultationCRUD {
 
-    private Connection conn = DBConnection.connectDB();
-    private FacilityCRUD facilityCRUD = new FacilityCRUD();  // for facility hours
-    private StatusDAO statusDAO = new StatusDAO(conn);
+    private final FacilityCRUD facilityCRUD = new FacilityCRUD();
 
     // CREATE the consultation
     public void create(Consultation consultation) throws SQLException {
@@ -32,7 +30,8 @@ public class ConsultationCRUD {
         String sql = "INSERT INTO consultation(patientID, hWorkerID, facilityID, consultationDate, " +
                      "consultationTime, symptoms, diagnosis, prescription, statusID) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, consultation.getPatientID());
             pstmt.setInt(2, consultation.getHWorkerID());
             pstmt.setInt(3, consultation.getFacilityID());
@@ -51,9 +50,10 @@ public class ConsultationCRUD {
         List<Consultation> consultations = new ArrayList<>();
         String sql = "SELECT c.*, s.statusName FROM consultation c " +
                      "JOIN REF_Status s ON c.statusID = s.statusID " +
-                     "WHERE s.statusCategoryID = 7"; 
+                     "WHERE s.statusCategoryID = 7";
 
-        try (Statement stmt = conn.createStatement();
+        try (Connection conn = DBConnection.connectDB();
+             Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
@@ -79,7 +79,8 @@ public class ConsultationCRUD {
         String sql = "SELECT c.*, s.statusName FROM consultation c " +
                      "JOIN REF_Status s ON c.statusID = s.statusID " +
                      "WHERE c.consultationID = ? AND s.statusCategoryID = 7";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, consultationID);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
@@ -110,7 +111,8 @@ public class ConsultationCRUD {
         String sql = "UPDATE consultation SET patientID=?, hWorkerID=?, facilityID=?, " +
                      "consultationDate=?, consultationTime=?, symptoms=?, diagnosis=?, " +
                      "prescription=?, statusID=? WHERE consultationID=?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, consultation.getPatientID());
             pstmt.setInt(2, consultation.getHWorkerID());
             pstmt.setInt(3, consultation.getFacilityID());
@@ -128,7 +130,8 @@ public class ConsultationCRUD {
     // SOFT DELETE (archive)
     public void archive(int consultationID) throws SQLException {
         String sql = "UPDATE consultation SET statusID = ? WHERE consultationID=?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, 3); // Archived
             pstmt.setInt(2, consultationID);
             pstmt.executeUpdate();
@@ -138,7 +141,8 @@ public class ConsultationCRUD {
     // RESTORE
     public void restore(int consultationID) throws SQLException {
         String sql = "UPDATE consultation SET statusID = ? WHERE consultationID=?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, 2); // Pending
             pstmt.setInt(2, consultationID);
             pstmt.executeUpdate();
@@ -148,7 +152,8 @@ public class ConsultationCRUD {
     // A helper to check if a record exists
     private boolean recordExists(String table, String column, int id) throws SQLException {
         String sql = "SELECT 1 FROM " + table + " WHERE " + column + " = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
             try (ResultSet rs = pstmt.executeQuery()) {
                 return rs.next();
@@ -166,6 +171,7 @@ public class ConsultationCRUD {
 
     // Convert enum to statusID
     private int convertStatusToID(Consultation.Status status) {
+        if (status == null) return 2;
         switch (status) {
             case PENDING: return 2;
             case COMPLETED: return 1;

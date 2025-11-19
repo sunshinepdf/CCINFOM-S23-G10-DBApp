@@ -1,48 +1,43 @@
 package Service;
 
-import Model.MedicineInventoryCRUD;
-import Model.MedicineInventory;
+import Model.Consultation;
+import Model.ConsultationCRUD;
 import java.sql.SQLException;
 import java.util.List;
 
+public class ConsultationService {
+    private final ConsultationCRUD dao = new ConsultationCRUD();
 
-public class MedicineInventoryService {
-    private final MedicineInventoryCRUD dao;
-
-    public MedicineInventoryService() {
-        this.dao = new MedicineInventoryCRUD();
-    }
-
-    public ServiceResult<List<MedicineInventory>> listAll() {
+    public ServiceResult<List<Consultation>> listAll() {
         try {
-            List<MedicineInventory> list = dao.readAll();
+            List<Consultation> list = dao.readAll();
             return ServiceResult.ok(list);
         } catch (SQLException e) {
             return ServiceResult.fail(SqlErrorMapper.normalize(e));
         }
     }
 
-    public ServiceResult<Void> create(MedicineInventory m) {
+    public ServiceResult<Void> create(Consultation c) {
         try {
-            dao.create(m);
+            dao.create(c);
             return ServiceResult.ok(null);
         } catch (SQLException e) {
             return ServiceResult.fail(SqlErrorMapper.normalize(e));
         }
     }
 
-    public ServiceResult<Void> delete(int id) {
+    public ServiceResult<Void> update(Consultation c) {
         try {
-            dao.delete(id);
+            dao.update(c);
             return ServiceResult.ok(null);
         } catch (SQLException e) {
             return ServiceResult.fail(SqlErrorMapper.normalize(e));
         }
     }
 
-    public ServiceResult<Void> updateAllStatuses() {
+    public ServiceResult<Void> archive(int id) {
         try {
-            dao.updateAllStatuses();
+            dao.archive(id);
             return ServiceResult.ok(null);
         } catch (SQLException e) {
             return ServiceResult.fail(SqlErrorMapper.normalize(e));
