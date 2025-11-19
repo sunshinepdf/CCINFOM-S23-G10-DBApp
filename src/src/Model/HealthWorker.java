@@ -71,4 +71,9 @@ public class HealthWorker {
     public void setWorkerStatus(Status workerStatus) { 
         this.workerStatus = workerStatus; 
     }
+
+    public String getWorkerStatusLabel() {
+        return workerStatus != null ? workerStatus.getStatusName() : "Unknown";
+    }
+    
 }
