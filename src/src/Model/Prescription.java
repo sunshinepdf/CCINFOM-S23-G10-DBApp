@@ -29,7 +29,21 @@ public class Prescription {
         this.prescriptionStatusID = prescriptionStatusID;
     }
 
-    // Getters and setters
+    public Prescription(int receiptID, int patientID, int consultationID, int medicineID, int hWorkerID,
+                        Date distributionDate, int qtyDistributed, boolean isValidPrescription,
+                        boolean inventoryUpdated, int prescriptionStatusID) {
+        this.receiptID = receiptID;
+        this.patientID = patientID;
+        this.consultationID = consultationID;
+        this.medicineID = medicineID;
+        this.hWorkerID = hWorkerID;
+        this.distributionDate = distributionDate;
+        this.qtyDistributed = qtyDistributed;
+        this.isValidPrescription = isValidPrescription;
+        this.inventoryUpdated = inventoryUpdated;
+        this.prescriptionStatusID = prescriptionStatusID;
+    }
+
     public int getReceiptID() { 
         return receiptID;
     }
