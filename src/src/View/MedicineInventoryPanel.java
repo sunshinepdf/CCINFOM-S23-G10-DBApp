@@ -4,8 +4,8 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 
-import MedicineInventoryController;
-import MedicineInventoryService;
+import Controller.MedicineInventoryController;
+import Service.MedicineInventoryService;
 
 import java.awt.*;
 import java.util.List;

@@ -1,27 +1,28 @@
+package View;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import java.awt.*;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
-import Model.HealthWorkerCRUD;
+import Controller.HealthWorkerController;
+import Service.HealthWorkerService;
 import Model.HealthWorker;
-import Model.DBConnection;
 import Model.Status;
-import Model.StatusDAO;
 
 public class HealthWorkerPanel extends JPanel {
     private JTable workerTable;
     private DefaultTableModel tableModel;
-    private HealthWorkerCRUD workerCRUD;
+    private HealthWorkerController controller;
+    private HealthWorkerService hwService;
     private JTextField searchField;
 
     public HealthWorkerPanel() {
         try {
-            workerCRUD = new HealthWorkerCRUD();
+            hwService = new HealthWorkerService();
             initializePanel();
-            loadWorkerData();
+            controller = new HealthWorkerController(this, hwService);
+            controller.loadWorkers();
         } catch (Exception e) {
             System.out.println("Database not available - using demo mode");
             initializePanel();
@@ -121,46 +122,16 @@ public class HealthWorkerPanel extends JPanel {
     }
 
     private void loadWorkerData() {
-        try {
-            List<HealthWorker> workers = workerCRUD.readAll();
-            tableModel.setRowCount(0); 
-
-            if (workers == null || workers.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "No health worker data returned from database.",
-                    "Database Info", JOptionPane.INFORMATION_MESSAGE);
-                return;
-            }
-            
-            for (HealthWorker worker : workers) {
-                tableModel.addRow(new Object[]{
-                    worker.getWorkerID(),
-                    worker.getFacilityID(),
-                    worker.getLastName(),
-                    worker.getFirstName(),
-                    worker.getPosition(),
-                    worker.getContactInformation(),
-                    worker.getWorkerStatus().getStatusName()
-                });
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error loading health workers: " + e.getMessage(), 
-                "Database Error", JOptionPane.ERROR_MESSAGE);
-        }
+        controller.loadWorkers();
     }
 
     private void showAddWorkerDialog() {
-    try {
-        List<Status> availableStatuses = StatusDAO.getStatusByCategory(getConnection(), "HealthWorkerStatus");
-        String[] statusNames = availableStatuses.stream()
-            .map(Status::getStatusName)
-            .toArray(String[]::new);
-        
         JTextField facilityIdField = new JTextField();
         JTextField lastNameField = new JTextField();
         JTextField firstNameField = new JTextField();
         JTextField positionField = new JTextField();
         JTextField contactField = new JTextField();
-        JComboBox<String> statusCombo = new JComboBox<>(statusNames);
+        JComboBox<String> statusCombo = new JComboBox<>(new String[]{"Active", "Inactive"});
 
         JPanel panel = new JPanel(new GridLayout(0, 2, 5, 5));
         panel.setPreferredSize(new Dimension(400, 200));
@@ -182,52 +153,35 @@ public class HealthWorkerPanel extends JPanel {
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         
         if (result == JOptionPane.OK_OPTION) {
+            try {
             // Validate inputs
-            if (facilityIdField.getText().trim().isEmpty() ||
-                lastNameField.getText().trim().isEmpty() ||
-                firstNameField.getText().trim().isEmpty() ||
-                positionField.getText().trim().isEmpty() ||
-                contactField.getText().trim().isEmpty()) {
-                
-                JOptionPane.showMessageDialog(this, "Please fill in all fields",
-                    "Validation Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
+                if (facilityIdField.getText().trim().isEmpty() ||
+                    lastNameField.getText().trim().isEmpty() ||
+                    firstNameField.getText().trim().isEmpty() ||
+                    positionField.getText().trim().isEmpty() ||
+                    contactField.getText().trim().isEmpty()) {
+                    
+                    JOptionPane.showMessageDialog(this, "Please fill in all fields",
+                        "Validation Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
 
-            String selectedStatusName = (String) statusCombo.getSelectedItem();
-            Status selectedStatus = availableStatuses.stream()
-                .filter(s -> s.getStatusName().equals(selectedStatusName))
-                .findFirst()
-                .orElse(null);
+                int facilityID = Integer.parseInt(facilityIdField.getText().trim());
 
-            if (selectedStatus == null) {
-                JOptionPane.showMessageDialog(this, "Invalid status selected",
-                    "Validation Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            int facilityID = Integer.parseInt(facilityIdField.getText().trim());
-            
-            HealthWorker worker = new HealthWorker(
-                -1,
-                facilityID,
-                lastNameField.getText().trim(),
-                firstNameField.getText().trim(),
-                positionField.getText().trim(),
-                contactField.getText().trim(),
-                selectedStatus
+                HealthWorker worker = new HealthWorker(
+                    -1,
+                    facilityID,
+                    lastNameField.getText().trim(),
+                    firstNameField.getText().trim(),
+                    positionField.getText().trim(),
+                    contactField.getText().trim(),
+                    new Status(-1, 0, (String) statusCombo.getSelectedItem())
                 );
-            
-                workerCRUD.create(worker);
-                loadWorkerData();
-                JOptionPane.showMessageDialog(this, "Health worker added successfully!");
+                controller.addWorker(worker);
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this, "Please enter a valid Facility ID (numbers only)",
+                    "Invalid Facility ID", JOptionPane.ERROR_MESSAGE);
             }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error adding health worker: " + e.getMessage(),
-                "Database Error", JOptionPane.ERROR_MESSAGE);
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Please enter a valid Facility ID (numbers only)",
-                "Invalid Facility ID", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -249,14 +203,7 @@ public class HealthWorkerPanel extends JPanel {
         "Confirm Deactivation", JOptionPane.YES_NO_OPTION);
     
     if (confirm == JOptionPane.YES_OPTION) {
-        try {
-            workerCRUD.softDelete(workerId);
-            loadWorkerData();
-            JOptionPane.showMessageDialog(this, "Health worker deactivated successfully");
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error deactivating health worker: " + e.getMessage(),
-                "Database Error", JOptionPane.ERROR_MESSAGE);
-        }
+        controller.softDelete(workerId);
     }
 }
 
@@ -267,37 +214,24 @@ public class HealthWorkerPanel extends JPanel {
             return;
         }
         
-        try {
-            int workerId = (int) tableModel.getValueAt(selectedRow, 0);
-            HealthWorker worker = workerCRUD.getHealthWorkerById(workerId);
-            
-            if (worker == null) {
+        int workerId = (int) tableModel.getValueAt(selectedRow, 0);
+        controller.fetchById(workerId, hw -> {
+            if (hw == null) {
                 JOptionPane.showMessageDialog(this, "Health worker not found in database");
                 return;
             }
-            
-            showEditWorkerDialog(worker);
-            
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error loading health worker data: " + e.getMessage(),
-                "Database Error", JOptionPane.ERROR_MESSAGE);
-        }
+            showEditWorkerDialog(hw);
+        });
     }
 
     private void showEditWorkerDialog(HealthWorker worker) {
-    try {
-        List<Status> availableStatuses = StatusDAO.getStatusByCategory(getConnection(), "HealthWorkerStatus");
-        String[] statusNames = availableStatuses.stream()
-            .map(Status::getStatusName)
-            .toArray(String[]::new);
-        
         JTextField facilityIdField = new JTextField(String.valueOf(worker.getFacilityID()));
         JTextField lastNameField = new JTextField(worker.getLastName());
         JTextField firstNameField = new JTextField(worker.getFirstName());
         JTextField positionField = new JTextField(worker.getPosition());
         JTextField contactField = new JTextField(worker.getContactInformation());
-        JComboBox<String> statusCombo = new JComboBox<>(statusNames);
-        statusCombo.setSelectedItem(worker.getWorkerStatus().getStatusName());
+        JComboBox<String> statusCombo = new JComboBox<>(new String[]{"Active", "Inactive"});
+        statusCombo.setSelectedItem(worker.getWorkerStatus().getLabel());
 
         JPanel panel = new JPanel(new GridLayout(0, 2, 5, 5));
         panel.setPreferredSize(new Dimension(400, 200));
@@ -331,18 +265,6 @@ public class HealthWorkerPanel extends JPanel {
                     return;
                 }
 
-                String selectedStatusName = (String) statusCombo.getSelectedItem();
-                Status selectedStatus = availableStatuses.stream()
-                    .filter(s -> s.getStatusName().equals(selectedStatusName))
-                    .findFirst()
-                    .orElse(null);
-
-                if (selectedStatus == null) {
-                    JOptionPane.showMessageDialog(this, "Invalid status selected",
-                        "Validation Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-
                 int facilityID = Integer.parseInt(facilityIdField.getText().trim());
                 
                 HealthWorker updatedWorker = new HealthWorker(
@@ -352,24 +274,47 @@ public class HealthWorkerPanel extends JPanel {
                     firstNameField.getText().trim(),
                     positionField.getText().trim(),
                     contactField.getText().trim(),
-                    selectedStatus
-                    );
-                    
-                    workerCRUD.update(updatedWorker);
-                    loadWorkerData();
-                    JOptionPane.showMessageDialog(this, "Health worker updated successfully!");
-                } catch (SQLException e) {
-                    JOptionPane.showMessageDialog(this, "Error updating health worker: " + e.getMessage(),
-                        "Database Error", JOptionPane.ERROR_MESSAGE);
-                } catch (NumberFormatException e) {
-                    JOptionPane.showMessageDialog(this, "Please enter a valid Facility ID (numbers only)",
-                        "Invalid Facility ID", JOptionPane.ERROR_MESSAGE);
-                }
+                    new Status(-1, 0, (String)statusCombo.getSelectedItem())
+                );
+
+                controller.updateWorker(updatedWorker);
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this, "Please enter a valid Facility ID (numbers only)",
+                    "Invalid Facility ID", JOptionPane.ERROR_MESSAGE);
             }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error loading status options: " + e.getMessage(),
-                "Database Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    // View helpers used by HealthWorkerController
+    public void showWorkers(java.util.List<HealthWorker> workers) {
+        tableModel.setRowCount(0);
+        if (workers == null) {
+            JOptionPane.showMessageDialog(this, "No health worker data returned from database.", "Database Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        for (HealthWorker worker : workers) {
+            tableModel.addRow(new Object[]{
+                    worker.getWorkerID(),
+                    worker.getFacilityID(),
+                    worker.getLastName(),
+                    worker.getFirstName(),
+                    worker.getPosition(),
+                    worker.getContactInformation(),
+                    worker.getWorkerStatus() != null ? worker.getWorkerStatus().getLabel() : ""
+            });
+        }
+    }
+
+    public void showLoading(boolean loading) {
+        setCursor(loading ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR) : Cursor.getDefaultCursor());
+    }
+
+    public void showError(String message) {
+        ErrorDialog.showError(message);
+    }
+
+    public void showInfo(String message) {
+        ErrorDialog.showInfo(message);
     }
 
     private void performSearch() {
@@ -401,9 +346,5 @@ public class HealthWorkerPanel extends JPanel {
         searchField.setText("");
         workerTable.clearSelection();
         loadWorkerData();
-    }
-
-    private Connection getConnection() throws SQLException {
-        return DBConnection.connectDB();
     }
 }

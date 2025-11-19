@@ -1,33 +1,26 @@
+package View;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import java.awt.*;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
-import Model.SupplierCRUD;
 import Model.Supplier;
-import Model.DBConnection;
 import Model.Status;
-import Model.StatusDAO;
+import Controller.SupplierController;
 
 public class SupplierPanel extends JPanel {
     private JTable supplierTable;
     private DefaultTableModel tableModel;
-    private SupplierCRUD supplierCRUD;
+    private SupplierController controller;
     private JTextField searchField;
 
     public SupplierPanel() {
-        try {
-            supplierCRUD = new SupplierCRUD();
-            initializePanel();
-            loadSupplierData();
-        } catch (Exception e) {
-            System.out.println("Database not available - using demo mode");
-            initializePanel();
-            addSampleData();
-        }
+        initializePanel();
+        this.controller = new SupplierController();
+        loadSupplierData();
     }
+
 
     private void addSampleData() {
         // sample data
@@ -148,48 +141,34 @@ public class SupplierPanel extends JPanel {
     }
 
     private void loadSupplierData() {
-        try {
-            List<Supplier> suppliers = supplierCRUD.readAll();
-            tableModel.setRowCount(0); // Clear data
-
-            if (suppliers == null || suppliers.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "No supplier data returned from database.",
-                    "Database Info", JOptionPane.INFORMATION_MESSAGE);
-                return;
+        showLoading(true);
+        controller.listSuppliers(res -> {
+            showLoading(false);
+            if (res.isSuccess()) {
+                List<Supplier> suppliers = res.getData();
+                if (suppliers == null || suppliers.isEmpty()) {
+                    showInfo("No supplier data returned from database.");
+                    tableModel.setRowCount(0);
+                    return;
+                }
+                showSuppliers(suppliers);
+            } else {
+                showError(res.getError());
             }
-            
-            for (Supplier supplier : suppliers) {
-                tableModel.addRow(new Object[]{
-                    supplier.getSupplierID(),
-                    supplier.getSupplierName(),
-                    supplier.getAddress(),
-                    supplier.getContactDetails(),
-                    supplier.getSupplierType(),
-                    supplier.getDeliveryLeadTime(),
-                    supplier.getTransactionDetails(),
-                    supplier.getSupplierStatus().getStatusName()
-                });
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error loading suppliers: " + e.getMessage(), 
-                "Database Error", JOptionPane.ERROR_MESSAGE);
-        }
+        }, ex -> {
+            showLoading(false);
+            showError(ex.getMessage());
+        });
     }
 
     private void showAddSupplierDialog() {
-    try {
-        List<Status> availableStatuses = StatusDAO.getStatusByCategory(getConnection(), "SupplierStatus");
-        String[] statusNames = availableStatuses.stream()
-            .map(Status::getStatusName)
-            .toArray(String[]::new);
-
         JTextField nameField = new JTextField();
         JTextField addressField = new JTextField();
         JTextField contactField = new JTextField();
         JTextField typeField = new JTextField();
         JTextField leadTimeField = new JTextField("0");
         JTextField transactionField = new JTextField();
-        JComboBox<String> statusCombo = new JComboBox<>(statusNames);
+        JComboBox<String> statusCombo = new JComboBox<>(new String[]{"Operational", "Closed"});
 
         JPanel panel = new JPanel(new GridLayout(0, 2, 5, 5));
         panel.setPreferredSize(new Dimension(500, 300));
@@ -211,33 +190,21 @@ public class SupplierPanel extends JPanel {
 
         int result = JOptionPane.showConfirmDialog(this, panel, "Add New Supplier",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        
+
         if (result == JOptionPane.OK_OPTION) {
+            // Validate inputs
+            if (nameField.getText().trim().isEmpty() ||
+                addressField.getText().trim().isEmpty() ||
+                contactField.getText().trim().isEmpty() ||
+                typeField.getText().trim().isEmpty()) {
+
+                showError("Please fill in all required fields");
+                return;
+            }
+
             try {
-                if (nameField.getText().trim().isEmpty() ||
-                    addressField.getText().trim().isEmpty() ||
-                    contactField.getText().trim().isEmpty() ||
-                    typeField.getText().trim().isEmpty()) {
-                    
-                    JOptionPane.showMessageDialog(this, "Please fill in all required fields",
-                        "Validation Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-
                 int leadTime = Integer.parseInt(leadTimeField.getText().trim());
-                
-                String selectedStatusName = (String) statusCombo.getSelectedItem();
-                Status selectedStatus = availableStatuses.stream()
-                    .filter(s -> s.getStatusName().equals(selectedStatusName))
-                    .findFirst()
-                    .orElse(null);
 
-                if (selectedStatus == null) {
-                    JOptionPane.showMessageDialog(this, "Invalid status selected",
-                        "Validation Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                
                 Supplier supplier = new Supplier(
                     -1,
                     nameField.getText().trim(),
@@ -246,23 +213,16 @@ public class SupplierPanel extends JPanel {
                     typeField.getText().trim(),
                     leadTime,
                     transactionField.getText().trim(),
-                    selectedStatus
-                    );
-                    
-                    supplierCRUD.create(supplier);
+                    new Status(-1, 0, (String) statusCombo.getSelectedItem())
+                );
+
+                controller.createSupplier(supplier, () -> {
                     loadSupplierData();
-                    JOptionPane.showMessageDialog(this, "Supplier added successfully!");
-                } catch (SQLException e) {
-                    JOptionPane.showMessageDialog(this, "Error adding supplier: " + e.getMessage(),
-                        "Database Error", JOptionPane.ERROR_MESSAGE);
-                } catch (NumberFormatException e) {
-                    JOptionPane.showMessageDialog(this, "Please enter a valid number for delivery lead time",
-                        "Invalid Lead Time", JOptionPane.ERROR_MESSAGE);
-                }
+                    showInfo("Supplier added successfully!");
+                }, ex -> showError(ex.getMessage()));
+            } catch (NumberFormatException e) {
+                showError("Please enter a valid number for delivery lead time");
             }
-        } catch (SQLException e) {  // Add this missing catch block
-            JOptionPane.showMessageDialog(this, "Error loading status options: " + e.getMessage(),
-                "Database Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -276,21 +236,17 @@ public class SupplierPanel extends JPanel {
         int supplierId = (int) tableModel.getValueAt(selectedRow, 0);
         String supplierName = (String) tableModel.getValueAt(selectedRow, 1);
         
-        int confirm = JOptionPane.showConfirmDialog(this, 
-            "Are you sure you want to close supplier:\n" + 
+        int confirm = JOptionPane.showConfirmDialog(this,
+            "Are you sure you want to close supplier:\n" +
             "ID: " + supplierId + " - " + supplierName + "?\n\n" +
-            "Note: This will set the supplier status to 'Closed' but preserve all data.", 
+            "Note: This will set the supplier status to 'Closed' but preserve all data.",
             "Confirm Closure", JOptionPane.YES_NO_OPTION);
-        
+
         if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                supplierCRUD.softDelete(supplierId);
+            controller.deleteSupplier(supplierId, () -> {
                 loadSupplierData();
-                JOptionPane.showMessageDialog(this, "Supplier closed successfully");
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(this, "Error closing supplier: " + e.getMessage(),
-                    "Database Error", JOptionPane.ERROR_MESSAGE);
-            }
+                showInfo("Supplier closed successfully");
+            }, ex -> showError(ex.getMessage()));
         }
     }
 
@@ -301,112 +257,120 @@ public class SupplierPanel extends JPanel {
             return;
         }
         
-        try {
-            int supplierId = (int) tableModel.getValueAt(selectedRow, 0);
-            Supplier supplier = supplierCRUD.getSupplierById(supplierId);
-            
-            if (supplier == null) {
-                JOptionPane.showMessageDialog(this, "Supplier not found in database");
-                return;
+        int supplierId = (int) tableModel.getValueAt(selectedRow, 0);
+        showLoading(true);
+        controller.getSupplierById(supplierId, res -> {
+            showLoading(false);
+            if (res.isSuccess()) {
+                Supplier supplier = res.getData();
+                if (supplier == null) {
+                    showError("Supplier not found in database");
+                    return;
+                }
+                showEditSupplierDialog(supplier);
+            } else {
+                showError(res.getError());
             }
-            
-            showEditSupplierDialog(supplier);
-            
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error loading supplier data: " + e.getMessage(),
-                "Database Error", JOptionPane.ERROR_MESSAGE);
-        }
+        }, ex -> {
+            showLoading(false);
+            showError(ex.getMessage());
+        });
     }
 
     private void showEditSupplierDialog(Supplier supplier) {
-        try {
-            List<Status> availableStatuses = StatusDAO.getStatusByCategory(getConnection(), "SupplierStatus");
-            String[] statusNames = availableStatuses.stream()
-                .map(Status::getStatusName)
-                .toArray(String[]::new);
-            
-            JTextField nameField = new JTextField(supplier.getSupplierName());
-            JTextField addressField = new JTextField(supplier.getAddress());
-            JTextField contactField = new JTextField(supplier.getContactDetails());
-            JTextField typeField = new JTextField(supplier.getSupplierType());
-            JTextField leadTimeField = new JTextField(String.valueOf(supplier.getDeliveryLeadTime()));
-            JTextField transactionField = new JTextField(supplier.getTransactionDetails());
-            JComboBox<String> statusCombo = new JComboBox<>(statusNames);
-            statusCombo.setSelectedItem(supplier.getSupplierStatus().getStatusName()); 
+        JTextField nameField = new JTextField(supplier.getSupplierName());
+        JTextField addressField = new JTextField(supplier.getAddress());
+        JTextField contactField = new JTextField(supplier.getContactDetails());
+        JTextField typeField = new JTextField(supplier.getSupplierType());
+        JTextField leadTimeField = new JTextField(String.valueOf(supplier.getDeliveryLeadTime()));
+        JTextField transactionField = new JTextField(supplier.getTransactionDetails());
+        JComboBox<String> statusCombo = new JComboBox<>(new String[]{"Operational", "Closed"});
+        statusCombo.setSelectedItem(supplier.getSupplierStatus().getLabel());
 
-            JPanel panel = new JPanel(new GridLayout(0, 2, 5, 5));
-            panel.setPreferredSize(new Dimension(500, 300));
-            
-            panel.add(new JLabel("Supplier Name:"));
-            panel.add(nameField);
-            panel.add(new JLabel("Address:"));
-            panel.add(addressField);
-            panel.add(new JLabel("Contact Details:"));
-            panel.add(contactField);
-            panel.add(new JLabel("Supplier Type:"));
-            panel.add(typeField);
-            panel.add(new JLabel("Delivery Lead Time (days):"));
-            panel.add(leadTimeField);
-            panel.add(new JLabel("Transaction Details:"));
-            panel.add(transactionField);
-            panel.add(new JLabel("Status:"));
-            panel.add(statusCombo);
+        JPanel panel = new JPanel(new GridLayout(0, 2, 5, 5));
+        panel.setPreferredSize(new Dimension(500, 300));
+        
+        panel.add(new JLabel("Supplier Name:"));
+        panel.add(nameField);
+        panel.add(new JLabel("Address:"));
+        panel.add(addressField);
+        panel.add(new JLabel("Contact Details:"));
+        panel.add(contactField);
+        panel.add(new JLabel("Supplier Type:"));
+        panel.add(typeField);
+        panel.add(new JLabel("Delivery Lead Time (days):"));
+        panel.add(leadTimeField);
+        panel.add(new JLabel("Transaction Details:"));
+        panel.add(transactionField);
+        panel.add(new JLabel("Status:"));
+        panel.add(statusCombo);
 
-            int result = JOptionPane.showConfirmDialog(this, panel, "Edit Supplier - ID: " + supplier.getSupplierID(),
-                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-            
-            if (result == JOptionPane.OK_OPTION) {
-                try {
-                    if (nameField.getText().trim().isEmpty() ||
-                        addressField.getText().trim().isEmpty() ||
-                        contactField.getText().trim().isEmpty() ||
-                        typeField.getText().trim().isEmpty()) {
-                        
-                        JOptionPane.showMessageDialog(this, "Please fill in all required fields",
-                            "Validation Error", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
+        int result = JOptionPane.showConfirmDialog(this, panel, "Edit Supplier - ID: " + supplier.getSupplierID(),
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        
+        if (result == JOptionPane.OK_OPTION) {
+            // Validate inputs
+            if (nameField.getText().trim().isEmpty() ||
+                addressField.getText().trim().isEmpty() ||
+                contactField.getText().trim().isEmpty() ||
+                typeField.getText().trim().isEmpty()) {
 
-                    int leadTime = Integer.parseInt(leadTimeField.getText().trim());
-                    
-                    String selectedStatusName = (String) statusCombo.getSelectedItem();
-                    Status selectedStatus = availableStatuses.stream()
-                        .filter(s -> s.getStatusName().equals(selectedStatusName))
-                        .findFirst()
-                        .orElse(null);
-
-                    if (selectedStatus == null) {
-                        JOptionPane.showMessageDialog(this, "Invalid status selected",
-                            "Validation Error", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-                    
-                    Supplier updatedSupplier = new Supplier(
-                        supplier.getSupplierID(),
-                        nameField.getText().trim(),
-                        addressField.getText().trim(),
-                        contactField.getText().trim(),
-                        typeField.getText().trim(),
-                        leadTime,
-                        transactionField.getText().trim(),
-                        selectedStatus
-                    );
-                    
-                    supplierCRUD.update(updatedSupplier);
-                    loadSupplierData();
-                    JOptionPane.showMessageDialog(this, "Supplier updated successfully!");
-                } catch (SQLException e) {
-                    JOptionPane.showMessageDialog(this, "Error updating supplier: " + e.getMessage(),
-                        "Database Error", JOptionPane.ERROR_MESSAGE);
-                } catch (NumberFormatException e) {
-                    JOptionPane.showMessageDialog(this, "Please enter a valid number for delivery lead time",
-                        "Invalid Lead Time", JOptionPane.ERROR_MESSAGE);
-                }
+                showError("Please fill in all required fields");
+                return;
             }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error loading status options: " + e.getMessage(),
-                "Database Error", JOptionPane.ERROR_MESSAGE);
+
+            try {
+                int leadTime = Integer.parseInt(leadTimeField.getText().trim());
+
+                Supplier updatedSupplier = new Supplier(
+                    supplier.getSupplierID(),
+                    nameField.getText().trim(),
+                    addressField.getText().trim(),
+                    contactField.getText().trim(),
+                    typeField.getText().trim(),
+                    leadTime,
+                    transactionField.getText().trim(),
+                    new Status(-1, 0, (String) statusCombo.getSelectedItem())
+                );
+
+                controller.updateSupplier(updatedSupplier, () -> {
+                    loadSupplierData();
+                    showInfo("Supplier updated successfully!");
+                }, ex -> showError(ex.getMessage()));
+            } catch (NumberFormatException e) {
+                showError("Please enter a valid number for delivery lead time");
+            }
         }
+    }
+
+    // View helper methods used by controller callbacks
+    private void showSuppliers(List<Supplier> suppliers) {
+        tableModel.setRowCount(0);
+        for (Supplier supplier : suppliers) {
+            tableModel.addRow(new Object[]{
+                supplier.getSupplierID(),
+                supplier.getSupplierName(),
+                supplier.getAddress(),
+                supplier.getContactDetails(),
+                supplier.getSupplierType(),
+                supplier.getDeliveryLeadTime(),
+                supplier.getTransactionDetails(),
+                supplier.getSupplierStatus() != null ? supplier.getSupplierStatus().getLabel() : ""
+            });
+        }
+    }
+
+    private void showLoading(boolean loading) {
+        // simple UI feedback: enable/disable table and buttons
+        supplierTable.setEnabled(!loading);
+    }
+
+    private void showError(String message) {
+        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    private void showInfo(String message) {
+        JOptionPane.showMessageDialog(this, message, "Info", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void performSearch() {
@@ -437,9 +401,5 @@ public class SupplierPanel extends JPanel {
         searchField.setText("");
         supplierTable.clearSelection();
         loadSupplierData();
-    }
-
-    private Connection getConnection() throws SQLException {
-        return DBConnection.connectDB();
     }
 }

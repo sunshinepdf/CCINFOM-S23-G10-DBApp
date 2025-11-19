@@ -1,6 +1,6 @@
 package Controller;
 
-import MedicineInventoryService;
+import Service.MedicineInventoryService;
 import Model.MedicineInventory;
 import View.MedicineInventoryPanel;
 

@@ -3,6 +3,7 @@ package Controller;
 import javax.swing.SwingWorker;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import Service.ServiceResult;
 
 /**
  * Small helper base class for controllers to run ServiceResult-producing tasks
