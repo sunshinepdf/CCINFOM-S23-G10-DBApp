@@ -8,20 +8,20 @@ public class HealthWorkerCRUD {
 
     // create
     public void create(HealthWorker hw) throws SQLException {
-        String sql = "INSERT INTO worker(facilityID, lastName, firstName, " +
-                "position, contactInformation, statusID) " +
-                "VALUES(?,?,?,?,?,?)";
+    String sql = "INSERT INTO worker(hWorkerFacilityID, hWorkerLastName, hWorkerFirstName, " +
+            "hWorkerPosition, hContactInformation, hWorkerStatusID) " + 
+            "VALUES(?,?,?,?,?,?)";
 
-        try (Connection conn = DBConnection.connectDB();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, hw.getFacilityID());
-            pstmt.setString(2, hw.getLastName());
-            pstmt.setString(3, hw.getFirstName());
-            pstmt.setString(4, hw.getPosition());
-            pstmt.setString(5, hw.getContactInformation());
-            pstmt.setInt(6, hw.getWorkerStatus().getStatusID());
+    try (Connection conn = DBConnection.connectDB();
+         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        pstmt.setInt(1, hw.getFacilityID());
+        pstmt.setString(2, hw.getLastName());
+        pstmt.setString(3, hw.getFirstName());
+        pstmt.setString(4, hw.getPosition());
+        pstmt.setString(5, hw.getContactInformation());
+        pstmt.setInt(6, hw.getWorkerStatus().getStatusID());
 
-            pstmt.executeUpdate();
+        pstmt.executeUpdate();
         }
     }
 
@@ -29,7 +29,7 @@ public class HealthWorkerCRUD {
     public List<HealthWorker> readAll() throws SQLException {
         List<HealthWorker> workers = new ArrayList<>();
         String sql = "SELECT hw.*, s.statusName FROM worker hw " +
-                    "JOIN REF_Status s ON hw.statusID = s.statusID " +
+                    "JOIN REF_Status s ON hw.hWorkerStatusID = s.statusID " +
                     "WHERE s.statusCategoryID = 2";
 
         try (Connection conn = DBConnection.connectDB();
@@ -37,17 +37,17 @@ public class HealthWorkerCRUD {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                int statusID = rs.getInt("workerStatus");
+                int statusID = rs.getInt("hWorkerStatusID"); 
                 Status status = StatusDAO.getStatusByID(conn, statusID);
 
                 HealthWorker hw = new HealthWorker(
-                    rs.getInt("workerID"),
-                    rs.getInt("facilityID"),
-                    rs.getString("lastName"),
-                    rs.getString("firstName"),
-                    rs.getString("position"),
-                    rs.getString("contactInformation"),
-                    status
+                rs.getInt("hWorkerID"),           
+                rs.getInt("hWorkerFacilityID"),   
+                rs.getString("hWorkerLastName"),  
+                rs.getString("hWorkerFirstName"), 
+                rs.getString("hWorkerPosition"),  
+                rs.getString("hContactInformation"), 
+                status
                 );
                 workers.add(hw);
             }
@@ -57,33 +57,33 @@ public class HealthWorkerCRUD {
 
     // update
     public void update(HealthWorker hw) throws SQLException {
-        String sql = "UPDATE worker SET facilityID=?, lastName=?, firstName=?, " +
-                "position=?, contactInformation=?, statusID=? " +
-                "WHERE workerID=?";
-        
-        try (Connection conn = DBConnection.connectDB();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, hw.getFacilityID());
-            pstmt.setString(2, hw.getLastName());
-            pstmt.setString(3, hw.getFirstName());
-            pstmt.setString(4, hw.getPosition()); 
-            pstmt.setString(5, hw.getContactInformation());
-            pstmt.setInt(6, hw.getWorkerStatus().getStatusID());
-            pstmt.setInt(7, hw.getWorkerID());
+    String sql = "UPDATE worker SET hWorkerFacilityID=?, hWorkerLastName=?, hWorkerFirstName=?, " +
+            "hWorkerPosition=?, hContactInformation=?, hWorkerStatusID=? " +  // Fixed column names
+            "WHERE hWorkerID=?";  // Fixed
+    
+    try (Connection conn = DBConnection.connectDB();
+         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        pstmt.setInt(1, hw.getFacilityID());
+        pstmt.setString(2, hw.getLastName());
+        pstmt.setString(3, hw.getFirstName());
+        pstmt.setString(4, hw.getPosition()); 
+        pstmt.setString(5, hw.getContactInformation());
+        pstmt.setInt(6, hw.getWorkerStatus().getStatusID());
+        pstmt.setInt(7, hw.getWorkerID());
 
-            pstmt.executeUpdate();
+        pstmt.executeUpdate();
         }
     }
 
     // soft delete
     public void softDelete(int workerId) throws SQLException {
-        String sql = "UPDATE worker SET statusID = ? WHERE workerID = ?";
-        
-        try (Connection conn = DBConnection.connectDB();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, 5); 
-            pstmt.setInt(2, workerId);
-            pstmt.executeUpdate();
+    String sql = "UPDATE worker SET hWorkerStatusID = ? WHERE hWorkerID = ?";  // Fixed column names
+    
+    try (Connection conn = DBConnection.connectDB();
+         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        pstmt.setInt(1, 5); // Inactive status ID
+        pstmt.setInt(2, workerId);
+        pstmt.executeUpdate();
         }
     }
 
@@ -100,27 +100,29 @@ public class HealthWorkerCRUD {
 
     // get id
     public HealthWorker getHealthWorkerById(int workerId) throws SQLException {
-        String sql = "SELECT hw.*, s.statusName FROM worker hw " +
-                    "JOIN REF_Status s ON hw.statusID = s.statusID " +
-                    "WHERE hw.workerID = ? AND s.statusCategoryID = 2";
-        
-        try (Connection conn = DBConnection.connectDB();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, workerId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    int statusID = rs.getInt("workerStatus");
-                    Status status = StatusDAO.getStatusByID(conn, statusID);
+    String sql = "SELECT w.hWorkerID, w.hWorkerFacilityID, w.hWorkerLastName, w.hWorkerFirstName, " +
+                "w.hWorkerPosition, w.hContactInformation, w.hWorkerStatusID, s.statusName " +
+                "FROM worker w " +
+                "JOIN REF_Status s ON w.hWorkerStatusID = s.statusID " +
+                "WHERE w.hWorkerID = ? AND s.statusCategoryID = 2";  
+    
+    try (Connection conn = DBConnection.connectDB();
+         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        pstmt.setInt(1, workerId);
+        try (ResultSet rs = pstmt.executeQuery()) {
+            if (rs.next()) {
+                int statusID = rs.getInt("hWorkerStatusID");  
+                Status status = StatusDAO.getStatusByID(conn, statusID);
 
-                    return new HealthWorker(
-                        rs.getInt("workerID"),
-                        rs.getInt("facilityID"),
-                        rs.getString("lastName"),
-                        rs.getString("firstName"),
-                        rs.getString("position"), 
-                        rs.getString("contactInformation"),
-                        status
-                    );
+                return new HealthWorker(
+                    rs.getInt("hWorkerID"),           
+                    rs.getInt("hWorkerFacilityID"),   
+                    rs.getString("hWorkerLastName"),  
+                    rs.getString("hWorkerFirstName"), 
+                    rs.getString("hWorkerPosition"),  
+                    rs.getString("hContactInformation"), 
+                    status
+                );
                 }
             }
         }
@@ -130,8 +132,8 @@ public class HealthWorkerCRUD {
     public List<HealthWorker> getHealthWorkersByFacility(int facilityId) throws SQLException {
         List<HealthWorker> workers = new ArrayList<>();
         String sql = "SELECT hw.*, s.statusName FROM worker hw " +
-                    "JOIN REF_Status s ON hw.statusID = s.statusID " +
-                    "WHERE hw.facilityID = ? AND s.statusCategoryID = 2";
+                    "JOIN REF_Status s ON hw.hWorkerStatusID = s.statusID " + 
+                    "WHERE hw.hWorkerFacilityID = ? AND s.statusCategoryID = 2";
         
         try (Connection conn = DBConnection.connectDB();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {

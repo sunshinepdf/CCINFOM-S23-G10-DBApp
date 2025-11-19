@@ -37,7 +37,7 @@ public class SupplierCRUD {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                int statusID = rs.getInt("supplierStatus");
+                int statusID = rs.getInt("statusID");
                 Status status = StatusDAO.getStatusByID(conn, statusID);
 
                 Supplier supplier = new Supplier(
@@ -110,7 +110,7 @@ public class SupplierCRUD {
             pstmt.setInt(1, supplierId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    int statusID = rs.getInt("supplierStatus");
+                    int statusID = rs.getInt("statusID");
                     Status status = StatusDAO.getStatusByID(conn, statusID);
 
                     return new Supplier(
