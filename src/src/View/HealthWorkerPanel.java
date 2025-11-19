@@ -4,22 +4,25 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import java.awt.*;
-import java.sql.SQLException;
 import java.util.List;
-import Model.HealthWorkerCRUD;
+import Controller.HealthWorkerController;
+import Service.HealthWorkerService;
 import Model.HealthWorker;
+import Model.Status;
 
 public class HealthWorkerPanel extends JPanel {
     private JTable workerTable;
     private DefaultTableModel tableModel;
-    private HealthWorkerCRUD workerCRUD;
+    private HealthWorkerController controller;
+    private HealthWorkerService hwService;
     private JTextField searchField;
 
     public HealthWorkerPanel() {
         try {
-            workerCRUD = new HealthWorkerCRUD();
+            hwService = new HealthWorkerService();
             initializePanel();
-            loadWorkerData();
+            controller = new HealthWorkerController(this, hwService);
+            controller.loadWorkers();
         } catch (Exception e) {
             System.out.println("Database not available - using demo mode");
             initializePanel();
@@ -119,31 +122,7 @@ public class HealthWorkerPanel extends JPanel {
     }
 
     private void loadWorkerData() {
-        try {
-            List<HealthWorker> workers = workerCRUD.readAll();
-            tableModel.setRowCount(0); 
-
-            if (workers == null || workers.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "No health worker data returned from database.",
-                    "Database Info", JOptionPane.INFORMATION_MESSAGE);
-                return;
-            }
-            
-            for (HealthWorker worker : workers) {
-                tableModel.addRow(new Object[]{
-                    worker.getWorkerID(),
-                    worker.getFacilityID(),
-                    worker.getLastName(),
-                    worker.getFirstName(),
-                    worker.getPosition(),
-                    worker.getContactInformation(),
-                    worker.getWorkerStatus().getLabel()
-                });
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error loading health workers: " + e.getMessage(), 
-                "Database Error", JOptionPane.ERROR_MESSAGE);
-        }
+        controller.loadWorkers();
     }
 
     private void showAddWorkerDialog() {
@@ -175,7 +154,7 @@ public class HealthWorkerPanel extends JPanel {
         
         if (result == JOptionPane.OK_OPTION) {
             try {
-                // Validate inputs
+            // Validate inputs
                 if (facilityIdField.getText().trim().isEmpty() ||
                     lastNameField.getText().trim().isEmpty() ||
                     firstNameField.getText().trim().isEmpty() ||
@@ -188,7 +167,7 @@ public class HealthWorkerPanel extends JPanel {
                 }
 
                 int facilityID = Integer.parseInt(facilityIdField.getText().trim());
-                
+
                 HealthWorker worker = new HealthWorker(
                     -1,
                     facilityID,
@@ -196,15 +175,9 @@ public class HealthWorkerPanel extends JPanel {
                     firstNameField.getText().trim(),
                     positionField.getText().trim(),
                     contactField.getText().trim(),
-                    HealthWorker.Status.fromLabel((String)statusCombo.getSelectedItem())
+                    new Status(-1, 0, (String) statusCombo.getSelectedItem())
                 );
-                
-                workerCRUD.create(worker);
-                loadWorkerData();
-                JOptionPane.showMessageDialog(this, "Health worker added successfully!");
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(this, "Error adding health worker: " + e.getMessage(),
-                    "Database Error", JOptionPane.ERROR_MESSAGE);
+                controller.addWorker(worker);
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(this, "Please enter a valid Facility ID (numbers only)",
                     "Invalid Facility ID", JOptionPane.ERROR_MESSAGE);
@@ -230,14 +203,7 @@ public class HealthWorkerPanel extends JPanel {
         "Confirm Deactivation", JOptionPane.YES_NO_OPTION);
     
     if (confirm == JOptionPane.YES_OPTION) {
-        try {
-            workerCRUD.softDelete(workerId);
-            loadWorkerData();
-            JOptionPane.showMessageDialog(this, "Health worker deactivated successfully");
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error deactivating health worker: " + e.getMessage(),
-                "Database Error", JOptionPane.ERROR_MESSAGE);
-        }
+        controller.softDelete(workerId);
     }
 }
 
@@ -248,21 +214,14 @@ public class HealthWorkerPanel extends JPanel {
             return;
         }
         
-        try {
-            int workerId = (int) tableModel.getValueAt(selectedRow, 0);
-            HealthWorker worker = workerCRUD.getHealthWorkerById(workerId);
-            
-            if (worker == null) {
+        int workerId = (int) tableModel.getValueAt(selectedRow, 0);
+        controller.fetchById(workerId, hw -> {
+            if (hw == null) {
                 JOptionPane.showMessageDialog(this, "Health worker not found in database");
                 return;
             }
-            
-            showEditWorkerDialog(worker);
-            
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error loading health worker data: " + e.getMessage(),
-                "Database Error", JOptionPane.ERROR_MESSAGE);
-        }
+            showEditWorkerDialog(hw);
+        });
     }
 
     private void showEditWorkerDialog(HealthWorker worker) {
@@ -315,20 +274,47 @@ public class HealthWorkerPanel extends JPanel {
                     firstNameField.getText().trim(),
                     positionField.getText().trim(),
                     contactField.getText().trim(),
-                    HealthWorker.Status.fromLabel((String)statusCombo.getSelectedItem())
+                    new Status(-1, 0, (String)statusCombo.getSelectedItem())
                 );
-                
-                workerCRUD.update(updatedWorker);
-                loadWorkerData();
-                JOptionPane.showMessageDialog(this, "Health worker updated successfully!");
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(this, "Error updating health worker: " + e.getMessage(),
-                    "Database Error", JOptionPane.ERROR_MESSAGE);
+
+                controller.updateWorker(updatedWorker);
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(this, "Please enter a valid Facility ID (numbers only)",
                     "Invalid Facility ID", JOptionPane.ERROR_MESSAGE);
             }
         }
+    }
+
+    // View helpers used by HealthWorkerController
+    public void showWorkers(java.util.List<HealthWorker> workers) {
+        tableModel.setRowCount(0);
+        if (workers == null) {
+            JOptionPane.showMessageDialog(this, "No health worker data returned from database.", "Database Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        for (HealthWorker worker : workers) {
+            tableModel.addRow(new Object[]{
+                    worker.getWorkerID(),
+                    worker.getFacilityID(),
+                    worker.getLastName(),
+                    worker.getFirstName(),
+                    worker.getPosition(),
+                    worker.getContactInformation(),
+                    worker.getWorkerStatus() != null ? worker.getWorkerStatus().getLabel() : ""
+            });
+        }
+    }
+
+    public void showLoading(boolean loading) {
+        setCursor(loading ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR) : Cursor.getDefaultCursor());
+    }
+
+    public void showError(String message) {
+        ErrorDialog.showError(message);
+    }
+
+    public void showInfo(String message) {
+        ErrorDialog.showInfo(message);
     }
 
     private void performSearch() {

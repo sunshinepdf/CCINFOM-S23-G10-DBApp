@@ -4,23 +4,25 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import java.awt.*;
-import java.sql.SQLException;
 import java.sql.Time;
-import java.util.List;
-import Model.FacilityCRUD;
+import Model.Status;
+import Controller.FacilityController;
+import Service.FacilityService;
 import Model.Facility;
 
 public class FacilityPanel extends JPanel {
     private JTable facilityTable;
     private DefaultTableModel tableModel;
-    private FacilityCRUD facilityCRUD;
+    private FacilityService facilityService;
+    private FacilityController controller;
     private JTextField searchField;
 
     public FacilityPanel() {
         try {
-            facilityCRUD = new FacilityCRUD();
+            facilityService = new FacilityService();
             initializePanel();
-            loadFacilityData();
+            controller = new FacilityController(this, facilityService);
+            controller.loadFacilities();
         } catch (Exception e) {
             System.out.println("Database not available - using demo mode");
             initializePanel();
@@ -114,31 +116,7 @@ public class FacilityPanel extends JPanel {
     }
 
     private void loadFacilityData() {
-        try {
-            List<Facility> facilities = facilityCRUD.readAll();
-            tableModel.setRowCount(0); // Clear data
-
-            if (facilities == null || facilities.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "No facility data returned from database.",
-                    "Database Info", JOptionPane.INFORMATION_MESSAGE);
-                return;
-            }
-            
-            for (Facility facility : facilities) {
-                tableModel.addRow(new Object[]{
-                    facility.getFacilityID(),
-                    facility.getFacilityName(),
-                    facility.getAddress(),
-                    facility.getContactNumber(),
-                    facility.getShiftStart(),
-                    facility.getShiftEnd(),
-                    facility.getFacilityStatus().getLabel()
-                });
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error loading facilities: " + e.getMessage(), 
-                "Database Error", JOptionPane.ERROR_MESSAGE);
-        }
+        controller.loadFacilities();
     }
 
     private void showAddFacilityDialog() {
@@ -191,15 +169,10 @@ public class FacilityPanel extends JPanel {
                     contactField.getText().trim(),
                     shiftStart,
                     shiftEnd,
-                    Facility.Status.fromLabel((String)statusCombo.getSelectedItem())
+                    new Status(-1, 0, (String) statusCombo.getSelectedItem())
                 );
                 
-                facilityCRUD.create(facility);
-                loadFacilityData();
-                JOptionPane.showMessageDialog(this, "Facility added successfully!");
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(this, "Error adding facility: " + e.getMessage(),
-                    "Database Error", JOptionPane.ERROR_MESSAGE);
+                controller.addFacility(facility);
             } catch (IllegalArgumentException e) {
                 JOptionPane.showMessageDialog(this, "Invalid time format. Please use HH:MM:SS format (e.g., 08:00:00)",
                     "Invalid Time Format", JOptionPane.ERROR_MESSAGE);
@@ -224,14 +197,7 @@ public class FacilityPanel extends JPanel {
             "Confirm Closure", JOptionPane.YES_NO_OPTION);
         
         if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                facilityCRUD.softDelete(facilityId); // Use soft delete instead of delete
-                loadFacilityData();
-                JOptionPane.showMessageDialog(this, "Facility closed successfully");
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(this, "Error closing facility: " + e.getMessage(),
-                    "Database Error", JOptionPane.ERROR_MESSAGE);
-            }
+            controller.softDelete(facilityId); // Use controller to perform soft delete
         }
     }
 
@@ -242,21 +208,9 @@ public class FacilityPanel extends JPanel {
             return;
         }
         
-        try {
-            int facilityId = (int) tableModel.getValueAt(selectedRow, 0);
-            Facility facility = facilityCRUD.getFacilityById(facilityId);
-            
-            if (facility == null) {
-                JOptionPane.showMessageDialog(this, "Facility not found in database");
-                return;
-            }
-            
-            showEditFacilityDialog(facility);
-            
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error loading facility data: " + e.getMessage(),
-                "Database Error", JOptionPane.ERROR_MESSAGE);
-        }
+        int facilityId = (int) tableModel.getValueAt(selectedRow, 0);
+        // Fetch facility via controller and then show edit dialog
+        controller.fetchFacilityById(facilityId, this::showEditFacilityDialog);
     }
 
     private void showEditFacilityDialog(Facility facility) {
@@ -266,7 +220,7 @@ public class FacilityPanel extends JPanel {
         JTextField shiftStartField = new JTextField(facility.getShiftStart().toString());
         JTextField shiftEndField = new JTextField(facility.getShiftEnd().toString());
         JComboBox<String> statusCombo = new JComboBox<>(new String[]{"Operational", "Closed", "Under Maintenance"});
-        statusCombo.setSelectedItem(facility.getFacilityStatus().getLabel());
+        statusCombo.setSelectedItem(facility.getFacilityStatus() != null ? facility.getFacilityStatus().getStatusName() : null);
 
         JPanel panel = new JPanel(new GridLayout(0, 2, 5, 5));
         panel.setPreferredSize(new Dimension(500, 250));
@@ -310,20 +264,48 @@ public class FacilityPanel extends JPanel {
                     contactField.getText().trim(),
                     shiftStart,
                     shiftEnd,
-                    Facility.Status.fromLabel((String)statusCombo.getSelectedItem())
+                    new Status(-1, 0, (String)statusCombo.getSelectedItem())
                 );
-                
-                facilityCRUD.update(updatedFacility);
-                loadFacilityData();
-                JOptionPane.showMessageDialog(this, "Facility updated successfully!");
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(this, "Error updating facility: " + e.getMessage(),
-                    "Database Error", JOptionPane.ERROR_MESSAGE);
+                controller.updateFacility(updatedFacility);
             } catch (IllegalArgumentException e) {
                 JOptionPane.showMessageDialog(this, "Invalid time format. Please use HH:MM:SS format (e.g., 08:00:00)",
                     "Invalid Time Format", JOptionPane.ERROR_MESSAGE);
             }
         }
+    }
+
+    // View helpers used by FacilityController
+    public void showFacilities(java.util.List<Facility> facilities) {
+        tableModel.setRowCount(0);
+
+        if (facilities == null) {
+            JOptionPane.showMessageDialog(this, "No facility data returned from database.", "Database Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        for (Facility facility : facilities) {
+            tableModel.addRow(new Object[]{
+                    facility.getFacilityID(),
+                    facility.getFacilityName(),
+                    facility.getAddress(),
+                    facility.getContactNumber(),
+                    facility.getShiftStart(),
+                    facility.getShiftEnd(),
+                        facility.getFacilityStatus() != null ? facility.getFacilityStatus().getStatusName() : ""
+            });
+        }
+    }
+
+    public void showLoading(boolean loading) {
+        setCursor(loading ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR) : Cursor.getDefaultCursor());
+    }
+
+    public void showError(String message) {
+        ErrorDialog.showError(message);
+    }
+
+    public void showInfo(String message) {
+        ErrorDialog.showInfo(message);
     }
 
     private void performSearch() {

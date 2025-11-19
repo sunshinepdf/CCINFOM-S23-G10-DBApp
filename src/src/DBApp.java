@@ -1,4 +1,5 @@
-import View.LoginFrame;
+import View.*;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.AWTEvent;

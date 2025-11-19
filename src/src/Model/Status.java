@@ -31,6 +31,11 @@ public class Status {
         return statusName;
     }
 
+    // Backwards-compatible alias used by views and enums elsewhere
+    public String getLabel() {
+        return statusName;
+    }
+
     public void setStatusName(String statusName) {
         this.statusName = statusName;
     }

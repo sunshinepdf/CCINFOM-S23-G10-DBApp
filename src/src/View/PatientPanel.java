@@ -4,8 +4,8 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 
-import PatientController;
-import PatientService;
+import Controller.PatientController;
+import Service.PatientService;
 
 import java.awt.*;
     
