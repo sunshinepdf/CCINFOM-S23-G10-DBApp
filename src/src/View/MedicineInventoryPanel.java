@@ -32,10 +32,10 @@ public class MedicineInventoryPanel extends JPanel {
     }
 
     public void addSampleData() {
-        // sample data
-        tableModel.addRow(new Object[]{1001, "Paracetamol 500mg", "Tablet", "Pain and fever relief", 150, "2025-12-31", "Available"});
-        tableModel.addRow(new Object[]{1002, "Amoxicillin 250mg", "Capsule", "Antibiotic for bacterial infections", 25, "2024-08-15", "Expired"});
-        tableModel.addRow(new Object[]{1003, "Vitamin C 1000mg", "Tablet", "Immune system support", 0, "2024-10-20", "Out of Stock"});
+        // sample data (inventory view format)
+        tableModel.addRow(new Object[]{1001, "Barangay Health Center Malolos", "Paracetamol", 150, "Available", "OK"});
+        tableModel.addRow(new Object[]{1002, "Barangay Health Center Bicutan", "Amoxicillin", 25, "Low Stock", "Low"});
+        tableModel.addRow(new Object[]{1003, "Barangay Health Center Taguig", "Vitamin C", 0, "Out of Stock", "Low"});
     }
 
     private void initializePanel() {
@@ -78,7 +78,7 @@ public class MedicineInventoryPanel extends JPanel {
         searchPanel.add(clearButton);
 
         // table
-        String[] columns = {"Medicine ID", "Medicine Name", "Medicine Type", "Description", "Quantity in Stock", "Expiry Date", "Status"};
+        String[] columns = {"Inventory ID", "Facility", "Medicine", "Quantity in Stock", "Inventory Status", "Stock Level"};
         tableModel = new DefaultTableModel(columns, 0);
         medicineTable = new JTable(tableModel);
 
@@ -128,39 +128,33 @@ public class MedicineInventoryPanel extends JPanel {
     private void setColumnWidths() {
         TableColumn column;
         medicineTable.getTableHeader().setReorderingAllowed(false);
-
-        // medicine ID
+        // Inventory ID
         column = medicineTable.getColumnModel().getColumn(0);
         column.setPreferredWidth(80);
         column.setResizable(false);
-        
-        // medicine name
+
+        // Facility (name)
         column = medicineTable.getColumnModel().getColumn(1);
-        column.setPreferredWidth(150);
-        column.setResizable(false);
-        
-        // medicine type
-        column = medicineTable.getColumnModel().getColumn(2);
-        column.setPreferredWidth(100);
-        column.setResizable(false);
-        
-        // description
-        column = medicineTable.getColumnModel().getColumn(3);
         column.setPreferredWidth(200);
         column.setResizable(false);
-        
-        // quantity in stock
-        column = medicineTable.getColumnModel().getColumn(4);
-        column.setPreferredWidth(100);
+
+        // Medicine (name)
+        column = medicineTable.getColumnModel().getColumn(2);
+        column.setPreferredWidth(200);
         column.setResizable(false);
 
-        // expiry date
-        column = medicineTable.getColumnModel().getColumn(5);
-        column.setPreferredWidth(100);
+        // Quantity in stock
+        column = medicineTable.getColumnModel().getColumn(3);
+        column.setPreferredWidth(120);
         column.setResizable(false);
-        
-        // status
-        column = medicineTable.getColumnModel().getColumn(6);
+
+        // inventory status
+        column = medicineTable.getColumnModel().getColumn(4);
+        column.setPreferredWidth(140);
+        column.setResizable(false);
+
+        // stock level
+        column = medicineTable.getColumnModel().getColumn(5);
         column.setPreferredWidth(100);
         column.setResizable(false);
     }
@@ -178,15 +172,41 @@ public class MedicineInventoryPanel extends JPanel {
             return;
         }
 
-        for (MedicineInventory medicine : medicines) {
+        for (MedicineInventory mi : medicines) {
             tableModel.addRow(new Object[]{
-                    medicine.getMedicineID(),
-                    medicine.getMedicineName(),
-                    medicine.getMedicineType().getLabel(),
-                    medicine.getDescription(),
-                    medicine.getQuantityInStock(),
-                    medicine.getExpiryDate(),
-                    medicine.getStatus().getLabel()
+                    mi.getInventoryID(),
+                    String.valueOf(mi.getFacilityID()),
+                    String.valueOf(mi.getMedicineID()),
+                    mi.getQuantityInStock(),
+                    mi.getInventoryStatusID() != null ? mi.getInventoryStatusID().getLabel() : "",
+                    ""
+            });
+        }
+    }
+
+    // show rows returned from the SQL view (with names)
+    public void showMedicineInventoryView(List<Map<String, Object>> rows) {
+        tableModel.setRowCount(0);
+        if (rows == null || rows.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No inventory data returned from database.", "Database Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        for (Map<String, Object> row : rows) {
+            Object inventoryID = row.get("inventoryID");
+            Object facilityName = row.get("facilityName");
+            Object medicineName = row.get("medicineName");
+            Object qty = row.get("quantityInStock");
+            Object invStatus = row.get("inventoryStatus");
+            Object stockLevel = row.get("stockLevel");
+
+            tableModel.addRow(new Object[]{
+                    inventoryID,
+                    facilityName,
+                    medicineName,
+                    qty,
+                    invStatus,
+                    stockLevel
             });
         }
     }
@@ -204,50 +224,44 @@ public class MedicineInventoryPanel extends JPanel {
     }
 
     private void showAddMedicineDialog() {
-        JTextField nameField = new JTextField();
-        JComboBox<String> typeCombo = new JComboBox<>(new String[]{"Medicine", "Vaccine"});
-        JTextArea descriptionArea = new JTextArea(3, 20);
-        JScrollPane descriptionScroll = new JScrollPane(descriptionArea);
+        JTextField facilityField = new JTextField();
+        JTextField medicineIdField = new JTextField();
         JTextField quantityField = new JTextField();
-        JTextField expiryField = new JTextField("2024-12-31");
+        JComboBox<String> statusCombo = new JComboBox<>(new String[]{"Available", "Expired", "Low Stock", "Out of Stock"});
 
         JPanel panel = new JPanel(new GridLayout(0, 2));
-        panel.add(new JLabel("Medicine Name:"));
-        panel.add(nameField);
-        panel.add(new JLabel("Medicine Type:"));
-        panel.add(typeCombo);
-        panel.add(new JLabel("Description:"));
-        panel.add(descriptionScroll);
+        panel.add(new JLabel("Facility ID:"));
+        panel.add(facilityField);
+        panel.add(new JLabel("Medicine ID:"));
+        panel.add(medicineIdField);
         panel.add(new JLabel("Quantity in Stock:"));
         panel.add(quantityField);
-        panel.add(new JLabel("Expiry Date (YYYY-MM-DD):"));
-        panel.add(expiryField);
+        panel.add(new JLabel("Status:"));
+        panel.add(statusCombo);
 
-        int result = JOptionPane.showConfirmDialog(this, panel, "Add New Medicine",
+        int result = JOptionPane.showConfirmDialog(this, panel, "Add New Medicine Inventory",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        
+
         if (result == JOptionPane.OK_OPTION) {
             try {
+                int facilityID = Integer.parseInt(facilityField.getText().trim());
+                int medicineID = Integer.parseInt(medicineIdField.getText().trim());
                 int quantity = Integer.parseInt(quantityField.getText().trim());
-                java.sql.Date expiryDate = java.sql.Date.valueOf(expiryField.getText());
-                
-                MedicineInventory medicine = new MedicineInventory(
-                    -1,
-                    nameField.getText(),
-                    (String) typeCombo.getSelectedItem(), 
-                    descriptionArea.getText(),
-                    quantity,
-                    expiryDate,
-                    "Available"
+
+                Model.MedicineInventory.Status status = Model.MedicineInventory.Status.fromLabel((String) statusCombo.getSelectedItem());
+
+                MedicineInventory mi = new MedicineInventory(
+                        -1,
+                        facilityID,
+                        medicineID,
+                        quantity,
+                        status
                 );
-                
-                controller.addMedicine(medicine);
+
+                controller.addMedicine(mi);
             } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(this, "Please enter a valid quantity (numbers only)",
-                    "Invalid Quantity", JOptionPane.ERROR_MESSAGE);
-            } catch (IllegalArgumentException e) {
-                JOptionPane.showMessageDialog(this, "Invalid date format. Use YYYY-MM-DD",
-                    "Invalid Date", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Please enter valid numbers for Facility ID, Medicine ID and Quantity",
+                        "Invalid Input", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -259,14 +273,14 @@ public class MedicineInventoryPanel extends JPanel {
             return;
         }
         
-        int medicineId = (int) tableModel.getValueAt(selectedRow, 0);
-        String medicineName = (String) tableModel.getValueAt(selectedRow, 1);
+        int inventoryId = (int) tableModel.getValueAt(selectedRow, 0);
+        String medicineName = String.valueOf(tableModel.getValueAt(selectedRow, 2));
         int confirm = JOptionPane.showConfirmDialog(this, 
-            "Are you sure you want to delete medicine: " + medicineName + " (ID: " + medicineId + ")?", 
+            "Are you sure you want to delete inventory item: " + medicineName + " (Inventory ID: " + inventoryId + ")?", 
             "Confirm Delete", JOptionPane.YES_NO_OPTION);
         
         if (confirm == JOptionPane.YES_OPTION) {
-            controller.deleteMedicine(medicineId);
+            controller.deleteMedicine(inventoryId);
         }
     }
 
@@ -286,11 +300,11 @@ public class MedicineInventoryPanel extends JPanel {
         }
         
         for (int i = 0; i < tableModel.getRowCount(); i++) {
-            String medicineName = ((String) tableModel.getValueAt(i, 1)).toLowerCase();
-            String medicineType = ((String) tableModel.getValueAt(i, 2)).toLowerCase();
-            String description = ((String) tableModel.getValueAt(i, 3)).toLowerCase();
-            
-            if (medicineName.contains(searchText) || medicineType.contains(searchText) || description.contains(searchText)) {
+            String facility = String.valueOf(tableModel.getValueAt(i, 1)).toLowerCase();
+            String medicineName = String.valueOf(tableModel.getValueAt(i, 2)).toLowerCase();
+            String status = String.valueOf(tableModel.getValueAt(i, 4)).toLowerCase();
+
+            if (facility.contains(searchText) || medicineName.contains(searchText) || status.contains(searchText)) {
                 medicineTable.setRowSelectionInterval(i, i);
                 medicineTable.scrollRectToVisible(medicineTable.getCellRect(i, 0, true));
                 return;

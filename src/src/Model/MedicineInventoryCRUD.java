@@ -38,7 +38,7 @@ public class MedicineInventoryCRUD {
             pstmt.setInt(2, m.getMedicineID());
             pstmt.setInt(3, m.getQuantityInStock());
             int statusID = convertStatusToID(m.getInventoryStatusID());
-            pstmt.setInt(9, statusID);
+            pstmt.setInt(4, statusID);
 
             pstmt.executeUpdate();
         }
@@ -47,7 +47,7 @@ public class MedicineInventoryCRUD {
     //read all
     public List<MedicineInventory> readAll() throws SQLException{
         List<MedicineInventory> medicines = new ArrayList<>();
-        String sql = "SELECT * FROM medicine_inventory";
+        String sql = "SELECT mi.*, rs.statusName FROM medicine_inventory mi LEFT JOIN REF_Status rs ON mi.inventoryStatusID = rs.statusID";
 
          //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
         try (Connection conn = DBConnection.connectDB();
@@ -70,19 +70,16 @@ public class MedicineInventoryCRUD {
 
     //update
     public void update(MedicineInventory m) throws SQLException {
-        String sql = "UPDATE medicines SET medicine_name=?, medicine_type=?, description=?, " +
-                "quantity_in_stock=?, expiry_date=?, status=? " +
-                "WHERE medicine_id=?";
-        
-        //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
+        String sql = "UPDATE medicine_inventory SET facilityID = ?, medicineID = ?, quantityInStock = ?, inventoryStatusID = ? WHERE inventoryID = ?";
+
         try (Connection conn = DBConnection.connectDB();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, m.getFacilityID());
             pstmt.setInt(2, m.getMedicineID());
             pstmt.setInt(3, m.getQuantityInStock());
             int statusID = convertStatusToID(m.getInventoryStatusID());
-            pstmt.setInt(9, statusID);
-            pstmt.setInt(7, m.getInventoryID());
+            pstmt.setInt(4, statusID);
+            pstmt.setInt(5, m.getInventoryID());
 
             pstmt.executeUpdate();
         }
@@ -90,12 +87,20 @@ public class MedicineInventoryCRUD {
 
     //delete
     public void delete(int id) throws SQLException {
-        String sql = "DELETE FROM medicines WHERE medicine_id = ?";
+        String sql = "DELETE FROM medicine_inventory WHERE inventoryID = ?";
 
-         //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
         try (Connection conn = DBConnection.connectDB();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
+            stmt.executeUpdate();
+        }
+    }
+
+    // Update inventoryStatusID for all inventory rows based on quantity thresholds
+    public void updateAllStatuses() throws SQLException {
+        String sql = "UPDATE medicine_inventory SET inventoryStatusID = CASE WHEN quantityInStock = 0 THEN 16 WHEN quantityInStock <= 10 THEN 15 ELSE 13 END";
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.executeUpdate();
         }
     }
