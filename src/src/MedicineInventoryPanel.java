@@ -58,7 +58,7 @@ public class MedicineInventoryPanel extends JPanel {
 
         // search panel
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JLabel searchLabel = new JLabel("Search:");
+        JLabel searchLabel = new JLabel("Search by Name:");
         searchField = new JTextField(20);
         JButton searchButton = new JButton("Search");
         JButton clearButton = new JButton("Clear");
@@ -79,6 +79,9 @@ public class MedicineInventoryPanel extends JPanel {
         Font largerFont = new Font("Arial", Font.PLAIN, 14); 
         medicineTable.setRowHeight(25);
         medicineTable.setFont(largerFont);
+        medicineTable.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
+        medicineTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        medicineTable.setEnabled(false);
 
         JScrollPane scrollPane = new JScrollPane(medicineTable);
 
