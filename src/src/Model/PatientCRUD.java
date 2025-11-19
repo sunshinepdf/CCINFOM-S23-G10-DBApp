@@ -6,16 +6,16 @@ import java.util.List;
 
 public class PatientCRUD {
 
-    private Connection conn = DBConnection.getConnection();
-    StatusDAO statusDAO = new StatusDAO(conn);
+    // [EDITS] Edited to use per-method connections (open/close within each method)
 
     //create
     public void create(Patient p) throws SQLException{
         String sql = "INSERT INTO patient(lastName, firstName, birthDate, " +
                 "gender, bloodType, address, primaryPhone, emergencyContact, patientStatus) " +
                 "VALUES(?,?,?,?,?,?,?,?,?)";
-
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, p.getLastName());
             pstmt.setString(2, p.getFirstName());
@@ -31,17 +31,19 @@ public class PatientCRUD {
         }
     }
 
-    //read all
+    //read
     public List<Patient> readAll() throws SQLException{
         List<Patient> patients = new ArrayList<>();
         String sql = "SELECT * FROM patient";
 
-        try (Statement stmt = conn.createStatement();
+        //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
+        try (Connection conn = DBConnection.connectDB();
+             Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
                 int statusID = rs.getInt("statusID");
-                Status status = statusDAO.getStatusByID(statusID);
+                Status status = StatusDAO.getStatusByID(conn, statusID);
 
                 Patient p = new Patient(
                         rs.getInt("patientID"),
@@ -66,7 +68,9 @@ public class PatientCRUD {
         String sql = "UPDATE patient SET lastName=?, firstName=?, birthDate=?, gender=?, " +
                 "bloodType=?, address=?, primaryPhone=?, emergencyContact=?, patientStatus=?" +
                 " WHERE patientID=?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, p.getLastName());
             pstmt.setString(2, p.getFirstName());
             pstmt.setDate(3, p.getBirthDate());
@@ -85,8 +89,9 @@ public class PatientCRUD {
     //delete
     public void delete(int id) throws SQLException {
         String sql = "{CALL sp_delete_patient(?)}";
-
-        try (CallableStatement stmt = conn.prepareCall(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             CallableStatement stmt = conn.prepareCall(sql)) {
+            
             stmt.setInt(1, id);
             stmt.executeUpdate();
         }
