@@ -1,13 +1,15 @@
-package View;
-
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import java.awt.*;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import Model.HealthWorkerCRUD;
 import Model.HealthWorker;
+import Model.DBConnection;
+import Model.Status;
+import Model.StatusDAO;
 
 public class HealthWorkerPanel extends JPanel {
     private JTable workerTable;
@@ -137,7 +139,7 @@ public class HealthWorkerPanel extends JPanel {
                     worker.getFirstName(),
                     worker.getPosition(),
                     worker.getContactInformation(),
-                    worker.getWorkerStatus().getLabel()
+                    worker.getWorkerStatus().getStatusName()
                 });
             }
         } catch (SQLException e) {
@@ -147,12 +149,18 @@ public class HealthWorkerPanel extends JPanel {
     }
 
     private void showAddWorkerDialog() {
+    try {
+        List<Status> availableStatuses = StatusDAO.getStatusByCategory(getConnection(), "HealthWorkerStatus");
+        String[] statusNames = availableStatuses.stream()
+            .map(Status::getStatusName)
+            .toArray(String[]::new);
+        
         JTextField facilityIdField = new JTextField();
         JTextField lastNameField = new JTextField();
         JTextField firstNameField = new JTextField();
         JTextField positionField = new JTextField();
         JTextField contactField = new JTextField();
-        JComboBox<String> statusCombo = new JComboBox<>(new String[]{"Active", "Inactive"});
+        JComboBox<String> statusCombo = new JComboBox<>(statusNames);
 
         JPanel panel = new JPanel(new GridLayout(0, 2, 5, 5));
         panel.setPreferredSize(new Dimension(400, 200));
@@ -174,41 +182,52 @@ public class HealthWorkerPanel extends JPanel {
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         
         if (result == JOptionPane.OK_OPTION) {
-            try {
-                // Validate inputs
-                if (facilityIdField.getText().trim().isEmpty() ||
-                    lastNameField.getText().trim().isEmpty() ||
-                    firstNameField.getText().trim().isEmpty() ||
-                    positionField.getText().trim().isEmpty() ||
-                    contactField.getText().trim().isEmpty()) {
-                    
-                    JOptionPane.showMessageDialog(this, "Please fill in all fields",
-                        "Validation Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
+            // Validate inputs
+            if (facilityIdField.getText().trim().isEmpty() ||
+                lastNameField.getText().trim().isEmpty() ||
+                firstNameField.getText().trim().isEmpty() ||
+                positionField.getText().trim().isEmpty() ||
+                contactField.getText().trim().isEmpty()) {
+                
+                JOptionPane.showMessageDialog(this, "Please fill in all fields",
+                    "Validation Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
-                int facilityID = Integer.parseInt(facilityIdField.getText().trim());
-                
-                HealthWorker worker = new HealthWorker(
-                    -1,
-                    facilityID,
-                    lastNameField.getText().trim(),
-                    firstNameField.getText().trim(),
-                    positionField.getText().trim(),
-                    contactField.getText().trim(),
-                    HealthWorker.Status.fromLabel((String)statusCombo.getSelectedItem())
+            String selectedStatusName = (String) statusCombo.getSelectedItem();
+            Status selectedStatus = availableStatuses.stream()
+                .filter(s -> s.getStatusName().equals(selectedStatusName))
+                .findFirst()
+                .orElse(null);
+
+            if (selectedStatus == null) {
+                JOptionPane.showMessageDialog(this, "Invalid status selected",
+                    "Validation Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            int facilityID = Integer.parseInt(facilityIdField.getText().trim());
+            
+            HealthWorker worker = new HealthWorker(
+                -1,
+                facilityID,
+                lastNameField.getText().trim(),
+                firstNameField.getText().trim(),
+                positionField.getText().trim(),
+                contactField.getText().trim(),
+                selectedStatus
                 );
-                
+            
                 workerCRUD.create(worker);
                 loadWorkerData();
                 JOptionPane.showMessageDialog(this, "Health worker added successfully!");
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(this, "Error adding health worker: " + e.getMessage(),
-                    "Database Error", JOptionPane.ERROR_MESSAGE);
-            } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(this, "Please enter a valid Facility ID (numbers only)",
-                    "Invalid Facility ID", JOptionPane.ERROR_MESSAGE);
             }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error adding health worker: " + e.getMessage(),
+                "Database Error", JOptionPane.ERROR_MESSAGE);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Please enter a valid Facility ID (numbers only)",
+                "Invalid Facility ID", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -266,13 +285,19 @@ public class HealthWorkerPanel extends JPanel {
     }
 
     private void showEditWorkerDialog(HealthWorker worker) {
+    try {
+        List<Status> availableStatuses = StatusDAO.getStatusByCategory(getConnection(), "HealthWorkerStatus");
+        String[] statusNames = availableStatuses.stream()
+            .map(Status::getStatusName)
+            .toArray(String[]::new);
+        
         JTextField facilityIdField = new JTextField(String.valueOf(worker.getFacilityID()));
         JTextField lastNameField = new JTextField(worker.getLastName());
         JTextField firstNameField = new JTextField(worker.getFirstName());
         JTextField positionField = new JTextField(worker.getPosition());
         JTextField contactField = new JTextField(worker.getContactInformation());
-        JComboBox<String> statusCombo = new JComboBox<>(new String[]{"Active", "Inactive"});
-        statusCombo.setSelectedItem(worker.getWorkerStatus().getLabel());
+        JComboBox<String> statusCombo = new JComboBox<>(statusNames);
+        statusCombo.setSelectedItem(worker.getWorkerStatus().getStatusName());
 
         JPanel panel = new JPanel(new GridLayout(0, 2, 5, 5));
         panel.setPreferredSize(new Dimension(400, 200));
@@ -306,6 +331,18 @@ public class HealthWorkerPanel extends JPanel {
                     return;
                 }
 
+                String selectedStatusName = (String) statusCombo.getSelectedItem();
+                Status selectedStatus = availableStatuses.stream()
+                    .filter(s -> s.getStatusName().equals(selectedStatusName))
+                    .findFirst()
+                    .orElse(null);
+
+                if (selectedStatus == null) {
+                    JOptionPane.showMessageDialog(this, "Invalid status selected",
+                        "Validation Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
                 int facilityID = Integer.parseInt(facilityIdField.getText().trim());
                 
                 HealthWorker updatedWorker = new HealthWorker(
@@ -315,19 +352,23 @@ public class HealthWorkerPanel extends JPanel {
                     firstNameField.getText().trim(),
                     positionField.getText().trim(),
                     contactField.getText().trim(),
-                    HealthWorker.Status.fromLabel((String)statusCombo.getSelectedItem())
-                );
-                
-                workerCRUD.update(updatedWorker);
-                loadWorkerData();
-                JOptionPane.showMessageDialog(this, "Health worker updated successfully!");
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(this, "Error updating health worker: " + e.getMessage(),
-                    "Database Error", JOptionPane.ERROR_MESSAGE);
-            } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(this, "Please enter a valid Facility ID (numbers only)",
-                    "Invalid Facility ID", JOptionPane.ERROR_MESSAGE);
+                    selectedStatus
+                    );
+                    
+                    workerCRUD.update(updatedWorker);
+                    loadWorkerData();
+                    JOptionPane.showMessageDialog(this, "Health worker updated successfully!");
+                } catch (SQLException e) {
+                    JOptionPane.showMessageDialog(this, "Error updating health worker: " + e.getMessage(),
+                        "Database Error", JOptionPane.ERROR_MESSAGE);
+                } catch (NumberFormatException e) {
+                    JOptionPane.showMessageDialog(this, "Please enter a valid Facility ID (numbers only)",
+                        "Invalid Facility ID", JOptionPane.ERROR_MESSAGE);
+                }
             }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error loading status options: " + e.getMessage(),
+                "Database Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -360,5 +401,9 @@ public class HealthWorkerPanel extends JPanel {
         searchField.setText("");
         workerTable.clearSelection();
         loadWorkerData();
+    }
+
+    private Connection getConnection() throws SQLException {
+        return DBConnection.connectDB();
     }
 }

@@ -1,14 +1,16 @@
-package View;
-
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import java.awt.*;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.util.List;
 import Model.FacilityCRUD;
 import Model.Facility;
+import Model.DBConnection;
+import Model.Status;
+import Model.StatusDAO;
 
 public class FacilityPanel extends JPanel {
     private JTable facilityTable;
@@ -132,7 +134,7 @@ public class FacilityPanel extends JPanel {
                     facility.getContactNumber(),
                     facility.getShiftStart(),
                     facility.getShiftEnd(),
-                    facility.getFacilityStatus().getLabel()
+                    facility.getFacilityStatus().getStatusName()
                 });
             }
         } catch (SQLException e) {
@@ -142,12 +144,18 @@ public class FacilityPanel extends JPanel {
     }
 
     private void showAddFacilityDialog() {
+    try {
+        List<Status> availableStatuses = StatusDAO.getStatusByCategory(getConnection(), "FacilityStatus");
+        String[] statusNames = availableStatuses.stream()
+            .map(Status::getStatusName)
+            .toArray(String[]::new);
+        
         JTextField nameField = new JTextField();
         JTextField addressField = new JTextField();
         JTextField contactField = new JTextField();
         JTextField shiftStartField = new JTextField("08:00:00");
         JTextField shiftEndField = new JTextField("17:00:00");
-        JComboBox<String> statusCombo = new JComboBox<>(new String[]{"Operational", "Closed", "Under Maintenance"});
+        JComboBox<String> statusCombo = new JComboBox<>(statusNames);
 
         JPanel panel = new JPanel(new GridLayout(0, 2, 5, 5));
         panel.setPreferredSize(new Dimension(500, 250));
@@ -170,13 +178,24 @@ public class FacilityPanel extends JPanel {
         
         if (result == JOptionPane.OK_OPTION) {
             try {
-                // Validate inputs
                 if (nameField.getText().trim().isEmpty() ||
                     addressField.getText().trim().isEmpty() ||
                     shiftStartField.getText().trim().isEmpty() ||
                     shiftEndField.getText().trim().isEmpty()) {
                     
                     JOptionPane.showMessageDialog(this, "Please fill in all required fields",
+                        "Validation Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                String selectedStatusName = (String) statusCombo.getSelectedItem();
+                Status selectedStatus = availableStatuses.stream()
+                    .filter(s -> s.getStatusName().equals(selectedStatusName))
+                    .findFirst()
+                    .orElse(null);
+
+                if (selectedStatus == null) {
+                    JOptionPane.showMessageDialog(this, "Invalid status selected",
                         "Validation Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
@@ -191,19 +210,23 @@ public class FacilityPanel extends JPanel {
                     contactField.getText().trim(),
                     shiftStart,
                     shiftEnd,
-                    Facility.Status.fromLabel((String)statusCombo.getSelectedItem())
-                );
-                
-                facilityCRUD.create(facility);
-                loadFacilityData();
-                JOptionPane.showMessageDialog(this, "Facility added successfully!");
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(this, "Error adding facility: " + e.getMessage(),
-                    "Database Error", JOptionPane.ERROR_MESSAGE);
-            } catch (IllegalArgumentException e) {
-                JOptionPane.showMessageDialog(this, "Invalid time format. Please use HH:MM:SS format (e.g., 08:00:00)",
-                    "Invalid Time Format", JOptionPane.ERROR_MESSAGE);
+                    selectedStatus 
+                    );
+                    
+                    facilityCRUD.create(facility);
+                    loadFacilityData();
+                    JOptionPane.showMessageDialog(this, "Facility added successfully!");
+                } catch (SQLException e) {
+                    JOptionPane.showMessageDialog(this, "Error adding facility: " + e.getMessage(),
+                        "Database Error", JOptionPane.ERROR_MESSAGE);
+                } catch (IllegalArgumentException e) {
+                    JOptionPane.showMessageDialog(this, "Invalid time format. Please use HH:MM:SS format (e.g., 08:00:00)",
+                        "Invalid Time Format", JOptionPane.ERROR_MESSAGE);
+                }
             }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error loading status options: " + e.getMessage(),
+                "Database Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -260,13 +283,19 @@ public class FacilityPanel extends JPanel {
     }
 
     private void showEditFacilityDialog(Facility facility) {
+    try {
+        List<Status> availableStatuses = StatusDAO.getStatusByCategory(getConnection(), "FacilityStatus");
+        String[] statusNames = availableStatuses.stream()
+            .map(Status::getStatusName)
+            .toArray(String[]::new);
+        
         JTextField nameField = new JTextField(facility.getFacilityName());
         JTextField addressField = new JTextField(facility.getAddress());
         JTextField contactField = new JTextField(facility.getContactNumber());
         JTextField shiftStartField = new JTextField(facility.getShiftStart().toString());
         JTextField shiftEndField = new JTextField(facility.getShiftEnd().toString());
-        JComboBox<String> statusCombo = new JComboBox<>(new String[]{"Operational", "Closed", "Under Maintenance"});
-        statusCombo.setSelectedItem(facility.getFacilityStatus().getLabel());
+        JComboBox<String> statusCombo = new JComboBox<>(statusNames); // Use database statuses
+        statusCombo.setSelectedItem(facility.getFacilityStatus().getStatusName());
 
         JPanel panel = new JPanel(new GridLayout(0, 2, 5, 5));
         panel.setPreferredSize(new Dimension(500, 250));
@@ -289,13 +318,24 @@ public class FacilityPanel extends JPanel {
         
         if (result == JOptionPane.OK_OPTION) {
             try {
-                // Validate inputs
                 if (nameField.getText().trim().isEmpty() ||
                     addressField.getText().trim().isEmpty() ||
                     shiftStartField.getText().trim().isEmpty() ||
                     shiftEndField.getText().trim().isEmpty()) {
                     
                     JOptionPane.showMessageDialog(this, "Please fill in all required fields",
+                        "Validation Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                String selectedStatusName = (String) statusCombo.getSelectedItem();
+                Status selectedStatus = availableStatuses.stream()
+                    .filter(s -> s.getStatusName().equals(selectedStatusName))
+                    .findFirst()
+                    .orElse(null);
+
+                if (selectedStatus == null) {
+                    JOptionPane.showMessageDialog(this, "Invalid status selected",
                         "Validation Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
@@ -310,19 +350,23 @@ public class FacilityPanel extends JPanel {
                     contactField.getText().trim(),
                     shiftStart,
                     shiftEnd,
-                    Facility.Status.fromLabel((String)statusCombo.getSelectedItem())
-                );
-                
-                facilityCRUD.update(updatedFacility);
-                loadFacilityData();
-                JOptionPane.showMessageDialog(this, "Facility updated successfully!");
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(this, "Error updating facility: " + e.getMessage(),
-                    "Database Error", JOptionPane.ERROR_MESSAGE);
-            } catch (IllegalArgumentException e) {
-                JOptionPane.showMessageDialog(this, "Invalid time format. Please use HH:MM:SS format (e.g., 08:00:00)",
-                    "Invalid Time Format", JOptionPane.ERROR_MESSAGE);
+                    selectedStatus 
+                    );
+                    
+                    facilityCRUD.update(updatedFacility);
+                    loadFacilityData();
+                    JOptionPane.showMessageDialog(this, "Facility updated successfully!");
+                } catch (SQLException e) {
+                    JOptionPane.showMessageDialog(this, "Error updating facility: " + e.getMessage(),
+                        "Database Error", JOptionPane.ERROR_MESSAGE);
+                } catch (IllegalArgumentException e) {
+                    JOptionPane.showMessageDialog(this, "Invalid time format. Please use HH:MM:SS format (e.g., 08:00:00)",
+                        "Invalid Time Format", JOptionPane.ERROR_MESSAGE);
+                }
             }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error loading status options: " + e.getMessage(),
+                "Database Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -354,5 +398,9 @@ public class FacilityPanel extends JPanel {
         searchField.setText("");
         facilityTable.clearSelection();
         loadFacilityData();
+    }
+
+    private Connection getConnection() throws SQLException {
+        return DBConnection.connectDB();
     }
 }
