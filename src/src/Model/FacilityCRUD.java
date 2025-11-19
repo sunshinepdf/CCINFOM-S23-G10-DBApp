@@ -5,15 +5,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FacilityCRUD {
-    private Connection conn = DBConnection.connectDB();
-    private StatusDAO statusDAO = new StatusDAO(conn);
 
     // create
     public void create(Facility facility) throws SQLException {
         String sql = "INSERT INTO facility(facilityName, address, contactNumber, shiftStart, shiftEnd, statusID) " +
                 "VALUES(?,?,?,?,?,?)";
 
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, facility.getFacilityName());
             pstmt.setString(2, facility.getAddress());
             pstmt.setString(3, facility.getContactNumber());
@@ -34,7 +33,8 @@ public class FacilityCRUD {
                     "JOIN REF_Status s ON f.statusID = s.statusID " +
                     "WHERE s.statusCategoryID = 1";
 
-        try (Statement stmt = conn.createStatement();
+        try (Connection conn = DBConnection.connectDB();
+             Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
@@ -59,7 +59,8 @@ public class FacilityCRUD {
                 "shiftStart=?, shiftEnd=?, statusID=? " +
                 "WHERE facilityID=?";
         
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, facility.getFacilityName());
             pstmt.setString(2, facility.getAddress());
             pstmt.setString(3, facility.getContactNumber());
@@ -77,7 +78,8 @@ public class FacilityCRUD {
     public void softDelete(int facilityId) throws SQLException {
         String sql = "UPDATE facility SET statusID = ? WHERE facilityID = ?";
         
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, 2); 
             pstmt.setInt(2, facilityId);
             pstmt.executeUpdate();
@@ -87,7 +89,8 @@ public class FacilityCRUD {
     public void restore(int facilityId) throws SQLException {
         String sql = "UPDATE facility SET statusID = ? WHERE facilityID = ?";
         
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, 1); 
             pstmt.setInt(2, facilityId);
             pstmt.executeUpdate();
@@ -99,7 +102,8 @@ public class FacilityCRUD {
                     "JOIN REF_Status s ON f.statusID = s.statusID " +
                     "WHERE f.facilityID = ? AND s.statusCategoryID = 1";
         
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, facilityId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
