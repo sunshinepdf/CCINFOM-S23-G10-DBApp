@@ -1,6 +1,10 @@
-import view.LoginFrame;
+import View.LoginFrame;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.AWTEvent;
+import java.awt.EventQueue;
+import java.awt.Toolkit;
+import java.sql.SQLException;
 
 public class DBApp {
     private JFrame mainFrame;
@@ -100,6 +104,10 @@ public class DBApp {
     }
 
     public static void main(String[] args) {
+        // Install global exception handlers so SQL errors or other uncaught
+        // exceptions show a UI popup instead of terminating the JVM.
+        installGlobalExceptionHandler();
+
         SwingUtilities.invokeLater(() -> {
             String userName = JOptionPane.showInputDialog("Enter your name:");
             if (userName != null && !userName.trim().isEmpty()) {
@@ -108,5 +116,48 @@ public class DBApp {
                 System.exit(0);
             }
         });
+    }
+
+    private static void installGlobalExceptionHandler() {
+        // Handler for non-EDT threads
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+            handleUncaught(throwable);
+        });
+
+        // Handler for the Event Dispatch Thread (EDT)
+        Toolkit.getDefaultToolkit().getSystemEventQueue().push(new EventQueue() {
+            @Override
+            protected void dispatchEvent(AWTEvent event) {
+                try {
+                    super.dispatchEvent(event);
+                } catch (Throwable t) {
+                    handleUncaught(t);
+                }
+            }
+        });
+    }
+
+    private static void handleUncaught(Throwable t) {
+        // Log to console for developers
+        t.printStackTrace();
+
+        // Determine friendly message for SQL errors
+        String title = "Application Error";
+        String message;
+        if (t instanceof SQLException) {
+            message = "A database error occurred:\n" + t.getMessage();
+        } else if (t.getCause() instanceof SQLException) {
+            message = "A database error occurred:\n" + t.getCause().getMessage();
+        } else {
+            message = "An unexpected error occurred:\n" + t.getClass().getSimpleName() + ": " + t.getMessage();
+        }
+
+        // Show the dialog on the EDT
+        try {
+            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(null, message, title, JOptionPane.ERROR_MESSAGE));
+        } catch (Throwable ignore) {
+            // If even the UI is unusable, print to console as a last resort
+            System.err.println(message);
+        }
     }
 }
