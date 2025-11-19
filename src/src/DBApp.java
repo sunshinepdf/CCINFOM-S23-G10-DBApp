@@ -24,7 +24,7 @@ public class DBApp {
         contentPanel.add(new DashboardPanel(userName, cardLayout, contentPanel), "DASHBOARD");
         contentPanel.add(new PatientPanel(), "PATIENTS");
         contentPanel.add(new MedicineInventoryPanel(), "MEDICINE");
-        contentPanel.add(createHealthWorkerRecordsPanel(), "WORKERS");
+        contentPanel.add(new HealthWorkerPanel(), "WORKERS");
         contentPanel.add(createFacilityRecordsPanel(), "FACILITIES");
         contentPanel.add(createSupplierRecordsPanel(), "SUPPLIERS");
 
