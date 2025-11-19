@@ -59,7 +59,7 @@ VALUES	('Dela Cruz', 'Ashanti Mae', 'Day Care Worker', '09171884564', 1, 4),
 		('Granger', 'Akeirra', 'Barangay Nutrition Scholar', '09260093257', 6, 4);
 
 
-INSERT IGNORE INTO patient (lastName, firstName, birthDate, gender, bloodType, address, primaryPhone, emergencyContact, patientStatus) 
+INSERT IGNORE INTO patient (lastName, firstName, birthDate, gender, bloodType, address, primaryPhone, emergencyContact, patientStatusID) 
 VALUES	('Santos', 'Juliet', '1989-05-26', 'Female', 'O+', '75 Rizal Avenue, Barangay 112, Malolos City', '09171233367', 'Romeo Santos - 09171734567', 6),
 		('Cheng', 'Jossh Robert', '1990-07-01', 'Male', 'AB+', '78 Antonio Street, Barangay 982, Paranaque City', '09182341288', 'Analita Cheng - 09189076179', 6),
 		('Cruz', 'Clayne Cherry', '1978-12-20', 'Female', 'B+', '234 Champaca Road, Barangay 644, Taguig City', '09193456789', 'Miguel Cruz - 09190206710', 6),
@@ -83,7 +83,7 @@ VALUES	('Getz Healthcare Philippines', '1006 Antel Global Corporate Center, Juli
 		('Pacific Surgical Inc', '1507 Jorge Bocobo Street, Ermita, Manila City', '09259012309', 'Medical Equipment Supplier', 10, 'Specializes in surgical instruments and hospital equipment. FDA-registered distributor. Government-accredited supplier. Payment terms negotiable.', 11),
 		('Biosyn Healthcare Systems Inc', 'Unit 301 Salcedo Village, Makati City, Metro Manila', '09260123410', 'Medical Equipment Supplier', 6, 'Medical device manufacturing and distribution. Complete hospital supplies and installation services. Bulk discounts available. Payment terms negotiable.', 11);
 
-INSERT IGNORE INTO medicine (medicineName, medicineDesc, dosageForm, strength, batchNumber, medicineStatus) 
+INSERT IGNORE INTO medicine (medicineName, medicineDesc, dosageForm, strength, batchNumber, medicineStatusID) 
 VALUES	('Paracetamol', 'Analgesic and antipyretic used to treat pain and fever. Commonly used for headaches, muscle aches, and reducing fever.', 'Tablet', '500mg', 'PARA2024-001', 8),
 		('Amoxicillin', 'Antibiotic used to treat bacterial infections including respiratory tract infections, urinary tract infections, and skin infections.', 'Capsule', '500mg', 'AMOX2024-002', 8),
 		('Cetirizine', 'Antihistamine used to relieve allergy symptoms such as watery eyes, runny nose, itching, and sneezing.', 'Tablet', '10mg', 'CETI2024-003', 8),
@@ -156,7 +156,7 @@ VALUES	(1, 1, 2, 3, '2024-11-15', 18, TRUE, TRUE, 20),
 		(1, 8, 2, 3, '2024-12-24', 14, TRUE, TRUE, 20),
 		(9, 9, 3, 6, '2024-12-27', 15, TRUE, TRUE, 20);
 
-INSERT IGNORE INTO immunization_administration (patientID, medicineID, hWorkerID, administrationDate, vaccineType, dosageNumber, nextVaccinationDate, immunizationStatus, sideEffects) 
+INSERT IGNORE INTO immunization_administration (patientID, medicineID, hWorkerID, administrationDate, vaccineType, dosageNumber, nextVaccinationDate, immunizationStatusID, sideEffects) 
 VALUES	(1, 9, 1, '2024-10-15', 'BCG', 1, NULL, 23, 'Mild redness at injection site'),
 		(2, 9, 3, '2024-10-20', 'BCG', 1, NULL, 23, 'None'),
 		(3, 10, 6, '2024-09-12', 'MMR', 1, '2025-09-12', 23, 'Low-grade fever for 1 day'),

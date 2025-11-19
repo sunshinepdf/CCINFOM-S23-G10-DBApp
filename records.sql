@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS patient (
     patientStatusID		INT				NOT NULL,
 	CONSTRAINT patient_pk PRIMARY KEY (patientID),
     CONSTRAINT patient_phoneCheck CHECK (primaryPhone REGEXP '^[0-9]{11}$'),
-	CONSTRAINT patientstatus_fk FOREIGN KEY (patientStatus) REFERENCES REF_Status(statusID)
+	CONSTRAINT patientstatus_fk FOREIGN KEY (patientStatusID) REFERENCES REF_Status(statusID)
 );
 
 -- SUPPLIER RECORDS (Assigned to KHYLE) --
@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS medicine (
     medicineStatusID 		INT 			NOT NULL,
     
     CONSTRAINT medicine_pk PRIMARY KEY (medicineID),
-    CONSTRAINT medicinestatus_fk FOREIGN KEY (medicineStatus) REFERENCES REF_Status(statusID),
+    CONSTRAINT medicinestatus_fk FOREIGN KEY (medicineStatusID) REFERENCES REF_Status(statusID),
     CONSTRAINT medicine_uqname UNIQUE (medicineName),
     CONSTRAINT medicine_uqbatchnum UNIQUE (batchNumber)
 );
@@ -226,7 +226,7 @@ CREATE TABLE IF NOT EXISTS immunization_administration (
     CONSTRAINT immunization_patient_fk FOREIGN KEY (patientID) REFERENCES patient(patientID),
     CONSTRAINT immunization_medicine_fk FOREIGN KEY (medicineID) REFERENCES medicine(medicineID),
     CONSTRAINT immunization_worker_fk FOREIGN KEY (hWorkerID) REFERENCES worker(hWorkerID),
-    CONSTRAINT immunization_status_fk FOREIGN KEY (immunizationStatus) REFERENCES REF_Status(statusID));
+    CONSTRAINT immunization_status_fk FOREIGN KEY (immunizationStatusID) REFERENCES REF_Status(statusID));
 
 -- RESTOCK INVOICE TRANSACTION RECORDS (Assigned to SPENCER) --
 CREATE TABLE IF NOT EXISTS restock_invoice (
