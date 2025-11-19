@@ -7,7 +7,8 @@ USE BHMS_DB;
 -- ==========================================================
 -- HELPER FUNCTION: SAFE STATUS LOOKUP
 -- ==========================================================
-DROP FUNCTION IF EXISTS fn_getStatusID$$
+DROP FUNCTION IF EXISTS fn_getStatusID;
+
 DELIMITER $$
 CREATE FUNCTION fn_getStatusID(p_statusName VARCHAR(50), p_categoryName VARCHAR(50))
 RETURNS INT
@@ -79,7 +80,7 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Emergency contact cannot be primary phone';
     END IF;
 END$$
-DELIMITER 
+DELIMITER ;
 
 -- ==========================================================
 -- MEDICINE INVENTORY TRIGGERS
@@ -154,17 +155,17 @@ BEGIN
     -- Get status IDs
     SELECT s.statusID INTO v_outOfStockStatusID
 	FROM REF_Status s JOIN REF_StatusCategory c ON s.statusCategoryID = c.statusCategoryID
-	WHERE s.statusName = 'Out of Stock' AND c.categoryName = 'InventoryStatus';
+	WHERE s.statusName = 'Out of Stock' AND c.categoryName = 'MedicineInventoryStatus';
 
 
 	SELECT s.statusID INTO v_lowStockStatusID
 	FROM REF_Status s JOIN REF_StatusCategory c ON s.statusCategoryID = c.statusCategoryID
-	WHERE s.statusName = 'Low Stock' AND c.categoryName = 'InventoryStatus';
+	WHERE s.statusName = 'Low Stock' AND c.categoryName = 'MedicineInventoryStatus';
 
 
 	SELECT s.statusID INTO v_availableStatusID
 	FROM REF_Status s JOIN REF_StatusCategory c ON s.statusCategoryID = c.statusCategoryID
-	WHERE s.statusName = 'Available' AND c.categoryName = 'InventoryStatus';
+	WHERE s.statusName = 'Available' AND c.categoryName = 'MedicineInventoryStatus';
     
     -- Update status based on quantity
     IF NEW.quantityInStock = 0 THEN
@@ -356,6 +357,8 @@ BEGIN
     IF NEW.distributionDate IS NULL THEN
         SET NEW.distributionDate = CURDATE();
     END IF;
+    
+    SET NEW.inventoryUpdated = TRUE;
 END$$
 DELIMITER ;
 
@@ -376,9 +379,6 @@ BEGIN
     WHERE medicineID = NEW.medicineID
     AND facilityID = consultation_facility;
 
-    UPDATE prescription_receipt
-    SET inventoryUpdated = TRUE
-    WHERE receiptID = NEW.receiptID;
 END$$
 DELIMITER ;
 
