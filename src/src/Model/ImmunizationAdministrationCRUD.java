@@ -88,16 +88,11 @@ public class ImmunizationAdministrationCRUD {
     }
 
     //delete
-    //TODO: Update Delete system to use update status instead of hard delete
     public void delete(int id) throws SQLException {
         String sql = "{CALL sp_delete_immunization(?)}";
-        String sql = "DELETE FROM immunization_administration WHERE immunizationID=?";
         //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
         try (Connection conn = DBConnection.connectDB();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, id);
-
-        try (CallableStatement stmt = conn.prepareCall(sql)) {
+             CallableStatement stmt = conn.prepareCall(sql)) {
             stmt.setInt(1, id);
             stmt.executeUpdate();
         }
