@@ -76,9 +76,9 @@ SELECT
     ) AS pctCompletedVaccinations
 FROM immunization_administration ia JOIN worker w ON ia.hWorkerID = w.hWorkerID
 									JOIN facility f ON w.hWorkerFacilityID = f.facilityID
-                  JOIN REF_Status rs ON rs.statusID = ia.immunizationStatus
+                  JOIN REF_Status rs ON rs.statusID = ia.immunizationStatusID
 									JOIN REF_StatusCategory rsc ON rsc.statusCategoryID = rs.statusCategoryID
-									WHERE rsc.categoryName = 'ImmunizationStatus'
+									WHERE rsc.categoryName = 'ImmunizationStatusID'
 GROUP BY f.facilityName, YEAR(ia.administrationDate), WEEK(ia.administrationDate, 1)
 ORDER BY f.facilityName, year, week;
 
@@ -97,9 +97,9 @@ SELECT
     ) AS pctCompletedVaccinations
 FROM immunization_administration ia JOIN worker w ON ia.hWorkerID = w.hWorkerID
 									JOIN facility f ON w.hWorkerFacilityID = f.facilityID
-                  JOIN REF_Status rs ON rs.statusID = ia.immunizationStatus
+                  JOIN REF_Status rs ON rs.statusID = ia.immunizationStatusID
 									JOIN REF_StatusCategory rsc ON rsc.statusCategoryID = rs.statusCategoryID
-									WHERE rsc.categoryName = 'ImmunizationStatus'
+									WHERE rsc.categoryName = 'ImmunizationStatusID'
 
 GROUP BY f.facilityName, YEAR(ia.administrationDate), MONTH(ia.administrationDate)
 ORDER BY f.facilityName, year, month;
@@ -118,18 +118,18 @@ SELECT
     ) AS pctCompletedVaccinations
 FROM immunization_administration ia JOIN worker w ON ia.hWorkerID = w.hWorkerID
 									JOIN facility f ON w.hWorkerFacilityID = f.facilityID
-                  JOIN REF_Status rs ON rs.statusID = ia.immunizationStatus
+                  JOIN REF_Status rs ON rs.statusID = ia.immunizationStatusID
 									JOIN REF_StatusCategory rsc ON rsc.statusCategoryID = rs.statusCategoryID
-									WHERE rsc.categoryName = 'ImmunizationStatus'
+									WHERE rsc.categoryName = 'ImmunizationStatusID'
 GROUP BY f.facilityName, YEAR(ia.administrationDate)
 ORDER BY f.facilityName, year;
 
 -- MEDICINE INVENTORY UTILIZATION REPORT (Assigned to RAPHY) --
-CREATE VIEW MedicineInventoryUtilization_Week AS
+-- WEEKLY
+CREATE OR REPLACE VIEW MedicineInventoryUtilization_Week AS
 SELECT
     f.facilityName,
     m.medicineName,
-    m.medicineType,
     YEAR(pr.distributionDate) AS year,
     WEEK(pr.distributionDate, 1) AS week,
     SUM(pr.qtyDistributed) AS totalDistributed,
@@ -140,17 +140,16 @@ FROM medicine m
 JOIN medicine_inventory mi ON m.medicineID = mi.medicineID
 JOIN facility f ON mi.facilityID = f.facilityID
 LEFT JOIN prescription_receipt pr ON pr.medicineID = m.medicineID
-    AND pr.facilityID = f.facilityID
-LEFT JOIN restock_invoice ri ON ri.supplierID = s.supplierID
+LEFT JOIN restock_invoice ri ON ri.supplierID IS NOT NULL
 LEFT JOIN supplier s ON ri.supplierID = s.supplierID
-GROUP BY f.facilityName, m.medicineName, m.medicineType, YEAR(pr.distributionDate), WEEK(pr.distributionDate, 1), s.supplierName, mi.quantityInStock
+GROUP BY f.facilityName, m.medicineName, YEAR(pr.distributionDate), WEEK(pr.distributionDate, 1), s.supplierName, mi.quantityInStock
 ORDER BY f.facilityName, m.medicineName, year, week;
 
-CREATE VIEW MedicineInventoryUtilization_Month AS
+-- MONTHLY
+CREATE OR REPLACE VIEW MedicineInventoryUtilization_Month AS
 SELECT
     f.facilityName,
     m.medicineName,
-    m.medicineType,
     YEAR(pr.distributionDate) AS year,
     MONTH(pr.distributionDate) AS month,
     SUM(pr.qtyDistributed) AS totalDistributed,
@@ -161,31 +160,28 @@ FROM medicine m
 JOIN medicine_inventory mi ON m.medicineID = mi.medicineID
 JOIN facility f ON mi.facilityID = f.facilityID
 LEFT JOIN prescription_receipt pr ON pr.medicineID = m.medicineID
-	AND pr.facilityID = f.facilityID
-LEFT JOIN restock_invoice ri ON ri.supplierID = s.supplierID
+LEFT JOIN restock_invoice ri ON ri.supplierID IS NOT NULL
 LEFT JOIN supplier s ON ri.supplierID = s.supplierID
-GROUP BY f.facilityName, m.medicineName, m.medicineType, YEAR(pr.distributionDate), MONTH(pr.distributionDate), s.supplierName, mi.quantityInStock
+GROUP BY f.facilityName, m.medicineName, YEAR(pr.distributionDate), MONTH(pr.distributionDate), s.supplierName, mi.quantityInStock
 ORDER BY f.facilityName, m.medicineName, year, month;
 
-CREATE VIEW MedicineInventoryUtilization_Year AS
+-- YEARLY
+CREATE OR REPLACE VIEW MedicineInventoryUtilization_Year AS
 SELECT
     f.facilityName,
     m.medicineName,
-    m.medicineType,
     YEAR(pr.distributionDate) AS year,
     SUM(pr.qtyDistributed) AS totalDistributed,
     mi.quantityInStock AS currentStock,
     s.supplierName,
     SUM(ri.totalOrderCost) AS totalRestockCost
 FROM medicine m
-JOIN medicine_inventory mi
-    ON m.medicineID = mi.medicineID
+JOIN medicine_inventory mi ON m.medicineID = mi.medicineID
 JOIN facility f ON mi.facilityID = f.facilityID
 LEFT JOIN prescription_receipt pr ON pr.medicineID = m.medicineID
-	AND pr.facilityID = f.facilityID
-LEFT JOIN restock_invoice ri ON ri.supplierID = s.supplierID
+LEFT JOIN restock_invoice ri ON ri.supplierID IS NOT NULL
 LEFT JOIN supplier s ON ri.supplierID = s.supplierID
-GROUP BY f.facilityName, m.medicineName, m.medicineType, YEAR(pr.distributionDate), s.supplierName, mi.quantityInStock
+GROUP BY f.facilityName, m.medicineName, YEAR(pr.distributionDate), s.supplierName, mi.quantityInStock
 ORDER BY f.facilityName, m.medicineName, year;
 
 -- DISEASE MONITORING REPORT (Assigned to SPENCER, CREATED BY ASHLEY) --
