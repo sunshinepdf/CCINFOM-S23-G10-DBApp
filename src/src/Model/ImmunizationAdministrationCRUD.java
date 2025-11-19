@@ -12,7 +12,7 @@ public class ImmunizationAdministrationCRUD {
     public void create(ImmunizationAdministration ia) throws SQLException{
         String sql = "INSERT INTO immunization_administration (patientID, medicineID, " +
                 "hWorkerID, administrationDate, vaccineType, dosageNumber, " +
-                "nextVaccinationDate, immunizationStatus, sideEffects) VALUES " +
+                "nextVaccinationDate, immunizationStatusID, sideEffects) VALUES " +
                 "(?, ?, ?, ?, ?, ?, ?, ?, ?)";
          //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
         try (Connection conn = DBConnection.connectDB();
@@ -42,7 +42,7 @@ public class ImmunizationAdministrationCRUD {
              ResultSet rs = pstmt.executeQuery()){
 
             while (rs.next()) {
-                int statusID = rs.getInt("immunizationStatus");
+                int statusID = rs.getInt("immunizationStatusID");
                 Status status = StatusDAO.getStatusByID(conn, statusID);
 
                 ImmunizationAdministration ia = new ImmunizationAdministration(
@@ -67,7 +67,7 @@ public class ImmunizationAdministrationCRUD {
     public void update(ImmunizationAdministration ia) throws SQLException {
         String sql = "UPDATE immunization_administration SET patientID=?, medicineID=?, " +
                 "hWorkerID=?, administrationDate=?, vaccineType=?, dosageNumber=?, " +
-                "nextVaccinationDate=?, immunizationStatus=?, sideEffects=? " +
+                "nextVaccinationDate=?, immunizationStatusID=?, sideEffects=? " +
                 "WHERE immunizationID=?";
         //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
         try (Connection conn = DBConnection.connectDB();
