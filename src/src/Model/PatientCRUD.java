@@ -88,10 +88,10 @@ public class PatientCRUD {
 
     //delete
     public void delete(int id) throws SQLException {
-        String sql = "DELETE FROM patient WHERE patientID = ?";
+        String sql = "{CALL sp_delete_patient(?)}";
         try (Connection conn = DBConnection.connectDB();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
+             CallableStatement stmt = conn.prepareCall(sql)) {
+            
             stmt.setInt(1, id);
             stmt.executeUpdate();
         }

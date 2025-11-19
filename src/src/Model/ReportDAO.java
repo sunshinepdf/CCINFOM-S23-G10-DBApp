@@ -32,4 +32,56 @@ public class ReportDAO {
             return rows;
         }
     }
+
+    //consultation summary reports
+    public List<Map<String, Object>> getConsultationSummaryWeek() throws SQLException {
+        return getReportFromView("ConsultationSummary_Week");
+    }
+
+    public List<Map<String, Object>> getConsultationSummaryMonth() throws SQLException {
+        return getReportFromView("ConsultationSummary_Month");
+    }
+
+    public List<Map<String, Object>> getConsultationSummaryYear() throws SQLException {
+        return getReportFromView("ConsultationSummary_Year");
+    }
+
+    //immunization impact reports
+    public List<Map<String, Object>> getImmunizationImpactWeek() throws SQLException {
+        return getReportFromView("ImmunizationImpact_Week");
+    }
+
+    public List<Map<String, Object>> getImmunizationImpactMonth() throws SQLException {
+        return getReportFromView("ImmunizationImpact_Month");
+    }
+
+    public List<Map<String, Object>> getImmunizationImpactYear() throws SQLException {
+        return getReportFromView("ImmunizationImpact_Year");
+    }
+
+    //medicine inventory and utilization report
+    public List<Map<String, Object>> getMedicineInventoryUtilization_Week() throws SQLException {
+        return getReportFromView("MedicineInventoryUtilization_Week");
+    }
+
+    public List<Map<String, Object>> getMedicineInventoryUtilization_Month() throws SQLException {
+        return getReportFromView("MedicineInventoryUtilization_Month");
+    }
+
+    public List<Map<String, Object>> getMedicineInventoryUtilization_Year() throws SQLException {
+        return getReportFromView("MedicineInventoryUtilization_Year");
+    }
+
+    //disease monitoring reports
+    public List<Map<String, Object>> getDiseaseCaseMonitoringWeek() throws SQLException {
+        return getReportFromView("DiseaseCaseMonitoring_Week");
+    }
+
+    public List<Map<String, Object>> getDiseaseCaseMonitoringMonth() throws SQLException {
+        return getReportFromView("DiseaseCaseMonitoring_Month");
+    }
+
+    public List<Map<String, Object>> getDiseaseCaseMonitoringYear() throws SQLException {
+        return getReportFromView("DiseaseCaseMonitoring_Year");
+    }
 }
