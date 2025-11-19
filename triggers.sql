@@ -95,23 +95,13 @@ CREATE TRIGGER trg_inventory_quantity_insert
 BEFORE INSERT ON medicine_inventory
 FOR EACH ROW
 BEGIN
-    IF NEW.quantityInStock < 0 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Quantity cannot be negative';
-    END IF;
-END$$
-DELIMITER ;
-
--- Prevent negative stock quantities
-DELIMITER $$
-CREATE TRIGGER trg_inventory_quantity_update
-BEFORE UPDATE ON medicine_inventory
-FOR EACH ROW
-BEGIN
+    -- Prevent negative quantities
     IF NEW.quantityInStock < 0 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Quantity cannot be negative';
     END IF;
 
-    IF NEW.quantityInStock = 0 THEN
+    -- Set inventory status based on quantity
+    IF NEW.quantityInStock IS NULL OR NEW.quantityInStock = 0 THEN
         SET NEW.inventoryStatusID = fn_getStatusID('Out of Stock','MedicineInventoryStatus');
     ELSEIF NEW.quantityInStock <= 10 THEN
         SET NEW.inventoryStatusID = fn_getStatusID('Low Stock','MedicineInventoryStatus');
@@ -120,6 +110,30 @@ BEGIN
     END IF;
 END$$
 DELIMITER ;
+
+
+-- Prevent negative stock quantities
+DELIMITER $$
+CREATE TRIGGER trg_inventory_quantity_update
+BEFORE UPDATE ON medicine_inventory
+FOR EACH ROW
+BEGIN
+    -- Prevent negative quantities
+    IF NEW.quantityInStock < 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Quantity cannot be negative';
+    END IF;
+
+    -- Set inventory status based on quantity
+    IF NEW.quantityInStock IS NULL OR NEW.quantityInStock = 0 THEN
+        SET NEW.inventoryStatusID = fn_getStatusID('Out of Stock','MedicineInventoryStatus');
+    ELSEIF NEW.quantityInStock <= 10 THEN
+        SET NEW.inventoryStatusID = fn_getStatusID('Low Stock','MedicineInventoryStatus');
+    ELSE
+        SET NEW.inventoryStatusID = fn_getStatusID('Available','MedicineInventoryStatus');
+    END IF;
+END$$
+DELIMITER ;
+
 
 -- Prevent updates on discontinued medicine
 DELIMITER $$
@@ -130,7 +144,7 @@ BEGIN
     DECLARE v_status VARCHAR(50);
     SELECT s.statusName INTO v_status
     FROM medicine m
-    JOIN REF_Status s ON m.medicineStatusID = s.statusID
+    JOIN REF_Status s ON m.medicineStatus = s.statusID
     JOIN REF_StatusCategory c ON s.statusCategoryID = c.statusCategoryID
     WHERE m.medicineID = NEW.medicineID AND c.categoryName='MedicineStatus';
 
@@ -187,7 +201,6 @@ DROP TRIGGER IF EXISTS trg_consult_hours;
 DROP TRIGGER IF EXISTS trg_consult_validate_date_birth;
 DROP TRIGGER IF EXISTS trg_consultation_validate_worker_insert;
 
-
 -- Validate Patient Status (not inactive)
 DELIMITER $$
 CREATE TRIGGER trg_block_inactive_patient_consult
@@ -197,7 +210,7 @@ BEGIN
     IF (
         SELECT s.statusName
         FROM patient p
-        JOIN REF_Status s ON p.patientStatusID = s.statusID
+        JOIN REF_Status s ON p.patientStatus = s.statusID
         JOIN REF_StatusCategory c ON s.statusCategoryID = c.statusCategoryID
         WHERE p.patientID = NEW.patientID AND c.categoryName = 'PatientStatus'
     ) = 'Inactive' THEN
@@ -320,6 +333,10 @@ BEGIN
     DECLARE consultation_exists INT;
     DECLARE consultation_facility INT;
 
+	IF NEW.inventoryStatusID IS NULL THEN
+        SET NEW.inventoryStatusID = COALESCE(fn_getStatusID('Distributed','InventoryStatus'), 1);
+    END IF;
+    
     SELECT s.statusName INTO worker_status
     FROM worker w
     JOIN REF_Status s ON w.hWorkerStatusID = s.statusID
@@ -567,7 +584,7 @@ DROP PROCEDURE IF EXISTS sp_delete_immunization;
 DELIMITER $$
 CREATE PROCEDURE sp_delete_patient(IN id INT)
 BEGIN
-    UPDATE patient SET patientStatusID = fn_getStatusID('Inactive','PatientStatus')
+    UPDATE patient SET patientStatus = fn_getStatusID('Inactive','PatientStatus')
     WHERE patientID = id;
 END$$
 DELIMITER ;
@@ -594,7 +611,7 @@ DELIMITER ;
 DELIMITER $$
 CREATE PROCEDURE sp_delete_medicine(IN id INT)
 BEGIN
-    UPDATE medicine SET medicineStatusID = fn_getStatusID('Discontinued','MedicineStatus')
+    UPDATE medicine SET medicineStatus = fn_getStatusID('Discontinued','MedicineStatus')
     WHERE medicineID = id;
 END$$
 DELIMITER ;
@@ -702,7 +719,7 @@ DELIMITER ;
 DELIMITER $$
 CREATE PROCEDURE sp_restore_patient(IN id INT)
 BEGIN
-    UPDATE patient SET patientStatusID = fn_getStatusID('Active','PatientStatus') WHERE patientID = id;
+    UPDATE patient SET patientStatus = fn_getStatusID('Active','PatientStatus') WHERE patientID = id;
 END$$
 DELIMITER ;
 
@@ -726,7 +743,7 @@ DELIMITER ;
 DELIMITER $$
 CREATE PROCEDURE sp_restore_medicine(IN id INT)
 BEGIN
-    UPDATE medicine SET medicineStatusID = fn_getStatusID('Available','MedicineStatus') WHERE medicineID = id;
+    UPDATE medicine SET medicineStatus = fn_getStatusID('Available','MedicineStatus') WHERE medicineID = id;
 END$$
 DELIMITER ;
 
