@@ -19,7 +19,7 @@ SELECT
     p.gender AS 'Patient Gender',
     p.address AS 'Patient Address'
 FROM medicine m
-JOIN REF_Status s ON m.medicineStatus = s.statusID
+JOIN REF_Status s ON m.medicineStatusID = s.statusID
 LEFT JOIN prescription_receipt pr ON m.medicineID = pr.medicineID
 LEFT JOIN patient p ON pr.patientID = p.patientID;
 
@@ -104,7 +104,7 @@ SELECT
     p.address,
     p.primaryPhone,
     p.emergencyContact,
-    p.patientStatus,
+    p.patientStatusID,
     mc.consultationID,
     mc.consultationDate,
     mc.diagnosis,
@@ -128,7 +128,7 @@ SELECT
     ia.administrationDate,
     ia.dosageNumber,
     ia.nextVaccinationDate,
-    ia.immunizationStatus,
+    ia.immunizationStatusID,
     ia.sideEffects
 FROM immunization_administration ia
 JOIN patient p ON ia.patientID = p.patientID

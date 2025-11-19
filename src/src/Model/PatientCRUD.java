@@ -30,14 +30,16 @@ public class PatientCRUD {
         }
     }
 
-    //read all
+    //read
     public List<Patient> readAll() throws SQLException{
         List<Patient> patients = new ArrayList<>();
         String sql = "SELECT p.*, s.statusName FROM patient p " +
                     "JOIN REF_Status s ON p.statusID = s.statusID" +
                     "WHERE s.statusCategoryID = 3";
 
-        try (Statement stmt = conn.createStatement();
+        //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
+        try (Connection conn = DBConnection.connectDB();
+             Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
