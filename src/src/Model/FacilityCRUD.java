@@ -8,7 +8,7 @@ public class FacilityCRUD {
 
     // create
     public void create(Facility facility) throws SQLException {
-        String sql = "INSERT INTO facility(facilityName, address, contactNumber, shiftStart, shiftEnd, statusID) " +
+        String sql = "INSERT INTO facility(facilityName, facilityAddress, facilityContactNum, shiftStart, shiftEnd, facilityStatusID) " +
                 "VALUES(?,?,?,?,?,?)";
 
         try (Connection conn = DBConnection.connectDB();
@@ -28,22 +28,22 @@ public class FacilityCRUD {
     public List<Facility> readAll() throws SQLException {
         List<Facility> facilities = new ArrayList<>();
         String sql = "SELECT f.*, s.statusName FROM facility f " +
-                    "JOIN REF_Status s ON f.statusID = s.statusID " +
-                    "WHERE s.statusCategoryID = 1";
+            "JOIN REF_Status s ON f.facilityStatusID = s.statusID " + 
+            "WHERE s.statusCategoryID = 1";
 
         try (Connection conn = DBConnection.connectDB();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                int statusID =  rs.getInt("facilityStatus");
+                int statusID =  rs.getInt("facilityStatusID");
                 Status status = StatusDAO.getStatusByID(conn,statusID);
 
                 Facility facility = new Facility(
                     rs.getInt("facilityID"),
                     rs.getString("facilityName"),
-                    rs.getString("address"),
-                    rs.getString("contactNumber"),
+                    rs.getString("facilityAddress"),
+                    rs.getString("facilityContactNum"),
                     rs.getTime("shiftStart"),
                     rs.getTime("shiftEnd"),
                     status
@@ -56,8 +56,8 @@ public class FacilityCRUD {
 
     // update
     public void update(Facility facility) throws SQLException {
-        String sql = "UPDATE facility SET facilityName=?, address=?, contactNumber=?, " +
-                "shiftStart=?, shiftEnd=?, statusID=? " +
+        String sql = "UPDATE facility SET facilityName=?, facilityAddress=?, facilityContactNum=?, " +
+                "shiftStart=?, shiftEnd=?, facilityStatusID=? " +
                 "WHERE facilityID=?";
         
         try (Connection conn = DBConnection.connectDB();
@@ -75,7 +75,7 @@ public class FacilityCRUD {
     }
 
     public void softDelete(int facilityId) throws SQLException {
-        String sql = "UPDATE facility SET statusID = ? WHERE facilityID = ?";
+        String sql = "UPDATE facility SET facilityStatusID = ? WHERE facilityID = ?";
         
         try (Connection conn = DBConnection.connectDB();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -86,7 +86,7 @@ public class FacilityCRUD {
     }
    
     public void restore(int facilityId) throws SQLException {
-        String sql = "UPDATE facility SET statusID = ? WHERE facilityID = ?";
+        String sql = "UPDATE facility SET facilityStatusID = ? WHERE facilityID = ?";
         
         try (Connection conn = DBConnection.connectDB();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -97,8 +97,8 @@ public class FacilityCRUD {
     }
 
     public Facility getFacilityById(int facilityId) throws SQLException {
-        String sql = "SELECT f.*, s.statusName FROM facility f " +
-                    "JOIN REF_Status s ON f.statusID = s.statusID " +
+        String sql = "SELECT f.* FROM facility f " +
+                    "JOIN REF_Status s ON f.facilityStatusID = s.statusID " + 
                     "WHERE f.facilityID = ? AND s.statusCategoryID = 1";
         
         try (Connection conn = DBConnection.connectDB();
@@ -107,13 +107,13 @@ public class FacilityCRUD {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     int statusID =  rs.getInt("facilityStatusID");
-                    Status  status = StatusDAO.getStatusByID(conn,statusID);
+                    Status status = StatusDAO.getStatusByID(conn, statusID);
 
                     return new Facility(
                         rs.getInt("facilityID"),
                         rs.getString("facilityName"),
-                        rs.getString("address"),
-                        rs.getString("contactNumber"),
+                        rs.getString("facilityAddress"),
+                        rs.getString("facilityContactNum"),
                         rs.getTime("shiftStart"),
                         rs.getTime("shiftEnd"),
                         status

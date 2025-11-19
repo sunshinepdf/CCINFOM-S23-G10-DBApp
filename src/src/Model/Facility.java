@@ -12,12 +12,12 @@ public class Facility {
     private Time shiftEnd;
     private Status facilityStatus;
 
-    public Facility(int facilityID, String facilityName, String address, String contactNumber,
+    public Facility(int facilityID, String facilityName, String facilityAddress, String facilityContactNum,
                    Time shiftStart, Time shiftEnd, Status facilityStatus) {
         this.facilityID = facilityID;
         this.facilityName = facilityName;
-        this.address = address;
-        this.contactNumber = contactNumber;
+        this.address = facilityAddress;
+        this.contactNumber = facilityContactNum;
         this.shiftStart = shiftStart;
         this.shiftEnd = shiftEnd;
         this.facilityStatus = facilityStatus;
