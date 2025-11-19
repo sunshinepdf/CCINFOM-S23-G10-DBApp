@@ -1,9 +1,6 @@
 package Model;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -89,11 +86,11 @@ public class ImmunizationAdministrationCRUD {
 
     //delete
     public void delete(int id) throws SQLException {
-        String sql = "DELETE FROM immunization_administration WHERE immunizationID=?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, id);
+        String sql = "{CALL sp_delete_immunization(?)}";
 
-            pstmt.executeUpdate();
+        try (CallableStatement stmt = conn.prepareCall(sql)) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
         }
     }
 }

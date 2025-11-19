@@ -60,8 +60,16 @@ public class ReportDAO {
     }
 
     //medicine inventory and utilization report
-    public List<Map<String, Object>> getMedicineInventoryUtilization() throws SQLException {
-        return getReportFromView("MedicineInventoryUtilization");
+    public List<Map<String, Object>> getMedicineInventoryUtilization_Week() throws SQLException {
+        return getReportFromView("MedicineInventoryUtilization_Week");
+    }
+
+    public List<Map<String, Object>> getMedicineInventoryUtilization_Month() throws SQLException {
+        return getReportFromView("MedicineInventoryUtilization_Month");
+    }
+
+    public List<Map<String, Object>> getMedicineInventoryUtilization_Year() throws SQLException {
+        return getReportFromView("MedicineInventoryUtilization_Year");
     }
 
     //disease monitoring reports
