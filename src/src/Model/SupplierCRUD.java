@@ -19,9 +19,7 @@ public class SupplierCRUD {
             pstmt.setString(4, supplier.getSupplierType());
             pstmt.setInt(5, supplier.getDeliveryLeadTime());
             pstmt.setString(6, supplier.getTransactionDetails());
-            
-            int statusID = convertStatusToID(supplier.getSupplierStatus());
-            pstmt.setInt(7, statusID);
+            pstmt.setInt(7, supplier.getSupplierStatus().getStatusID());
 
             pstmt.executeUpdate();
         }
@@ -39,6 +37,9 @@ public class SupplierCRUD {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
+                int statusID = rs.getInt("supplierStatus");
+                Status status = StatusDAO.getStatusByID(conn, statusID);
+
                 Supplier supplier = new Supplier(
                     rs.getInt("supplierID"),
                     rs.getString("supplierName"),
@@ -47,7 +48,7 @@ public class SupplierCRUD {
                     rs.getString("supplierType"),
                     rs.getInt("deliveryLeadTime"),
                     rs.getString("transactionDetails"),
-                    convertStatusNameToEnum(rs.getString("statusName"))
+                    status
                 );
                 suppliers.add(supplier);
             }
@@ -69,9 +70,7 @@ public class SupplierCRUD {
             pstmt.setString(4, supplier.getSupplierType());
             pstmt.setInt(5, supplier.getDeliveryLeadTime());
             pstmt.setString(6, supplier.getTransactionDetails());
-            
-            int statusID = convertStatusToID(supplier.getSupplierStatus());
-            pstmt.setInt(7, statusID);
+            pstmt.setInt(7, supplier.getSupplierStatus().getStatusID());
             pstmt.setInt(8, supplier.getSupplierID());
 
             pstmt.executeUpdate();
@@ -111,6 +110,9 @@ public class SupplierCRUD {
             pstmt.setInt(1, supplierId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
+                    int statusID = rs.getInt("supplierStatus");
+                    Status status = StatusDAO.getStatusByID(conn, statusID);
+
                     return new Supplier(
                         rs.getInt("supplierID"),
                         rs.getString("supplierName"),
@@ -119,29 +121,11 @@ public class SupplierCRUD {
                         rs.getString("supplierType"),
                         rs.getInt("deliveryLeadTime"),
                         rs.getString("transactionDetails"),
-                        convertStatusNameToEnum(rs.getString("statusName"))
+                        status
                     );
                 }
             }
         }
         return null;
-    }
-
-    private int convertStatusToID(Supplier.Status status) {
-        switch (status) {
-            case OPERATIONAL: return 11;
-            case CLOSED: return 12;     
-            default: return 11; 
-        }
-    }
-
-    private Supplier.Status convertStatusNameToEnum(String statusName) {
-        if ("Operational".equalsIgnoreCase(statusName)) {
-            return Supplier.Status.OPERATIONAL;
-        } else if ("Closed".equalsIgnoreCase(statusName)) {
-            return Supplier.Status.CLOSED;
-        } else {
-            return Supplier.Status.OPERATIONAL;
-        }
     }
 }

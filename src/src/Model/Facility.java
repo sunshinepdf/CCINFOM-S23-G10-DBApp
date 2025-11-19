@@ -4,29 +4,6 @@ import java.sql.Time;
 
 public class Facility {
 
-    public enum Status {
-        OPERATIONAL("Operational"), CLOSED("Closed"), UNDER_MAINTENANCE("Under Maintenance");
-
-        private final String label;
-
-        Status(String label) {
-            this.label = label;
-        }
-
-        public String getLabel() {
-            return label;
-        }
-
-        public static Status fromLabel(String value) {
-            for (Status status : Status.values()) {
-                if (status.getLabel().equalsIgnoreCase(value)) {
-                    return status;
-                }
-            }
-            return null;
-        }
-    }
-
     private int facilityID;
     private String facilityName;
     private String address;

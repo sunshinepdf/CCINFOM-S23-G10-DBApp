@@ -8,7 +8,7 @@ public class HealthWorkerCRUD {
 
     // create
     public void create(HealthWorker hw) throws SQLException {
-        String sql = "INSERT INTO healthworker(facilityID, lastName, firstName, " +
+        String sql = "INSERT INTO worker(facilityID, lastName, firstName, " +
                 "position, contactInformation, statusID) " +
                 "VALUES(?,?,?,?,?,?)";
 
@@ -19,9 +19,7 @@ public class HealthWorkerCRUD {
             pstmt.setString(3, hw.getFirstName());
             pstmt.setString(4, hw.getPosition());
             pstmt.setString(5, hw.getContactInformation());
-            
-            int statusID = convertStatusToID(hw.getWorkerStatus());
-            pstmt.setInt(6, statusID);
+            pstmt.setInt(6, hw.getWorkerStatus().getStatusID());
 
             pstmt.executeUpdate();
         }
@@ -30,7 +28,7 @@ public class HealthWorkerCRUD {
     // read all
     public List<HealthWorker> readAll() throws SQLException {
         List<HealthWorker> workers = new ArrayList<>();
-        String sql = "SELECT hw.*, s.statusName FROM healthworker hw " +
+        String sql = "SELECT hw.*, s.statusName FROM worker hw " +
                     "JOIN REF_Status s ON hw.statusID = s.statusID " +
                     "WHERE s.statusCategoryID = 2";
 
@@ -39,6 +37,9 @@ public class HealthWorkerCRUD {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
+                int statusID = rs.getInt("workerStatus");
+                Status status = StatusDAO.getStatusByID(conn, statusID);
+
                 HealthWorker hw = new HealthWorker(
                     rs.getInt("workerID"),
                     rs.getInt("facilityID"),
@@ -46,7 +47,7 @@ public class HealthWorkerCRUD {
                     rs.getString("firstName"),
                     rs.getString("position"),
                     rs.getString("contactInformation"),
-                    convertStatusNameToEnum(rs.getString("statusName"))
+                    status
                 );
                 workers.add(hw);
             }
@@ -56,7 +57,7 @@ public class HealthWorkerCRUD {
 
     // update
     public void update(HealthWorker hw) throws SQLException {
-        String sql = "UPDATE healthworker SET facilityID=?, lastName=?, firstName=?, " +
+        String sql = "UPDATE worker SET facilityID=?, lastName=?, firstName=?, " +
                 "position=?, contactInformation=?, statusID=? " +
                 "WHERE workerID=?";
         
@@ -67,9 +68,7 @@ public class HealthWorkerCRUD {
             pstmt.setString(3, hw.getFirstName());
             pstmt.setString(4, hw.getPosition()); 
             pstmt.setString(5, hw.getContactInformation());
-            
-            int statusID = convertStatusToID(hw.getWorkerStatus());
-            pstmt.setInt(6, statusID);
+            pstmt.setInt(6, hw.getWorkerStatus().getStatusID());
             pstmt.setInt(7, hw.getWorkerID());
 
             pstmt.executeUpdate();
@@ -78,7 +77,7 @@ public class HealthWorkerCRUD {
 
     // soft delete
     public void softDelete(int workerId) throws SQLException {
-        String sql = "UPDATE healthworker SET statusID = ? WHERE workerID = ?";
+        String sql = "UPDATE worker SET statusID = ? WHERE workerID = ?";
         
         try (Connection conn = DBConnection.connectDB();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -89,7 +88,7 @@ public class HealthWorkerCRUD {
     }
 
     public void restore(int workerId) throws SQLException {
-        String sql = "UPDATE healthworker SET statusID = ? WHERE workerID = ?";
+        String sql = "UPDATE worker SET statusID = ? WHERE workerID = ?";
         
         try (Connection conn = DBConnection.connectDB();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -101,7 +100,7 @@ public class HealthWorkerCRUD {
 
     // get id
     public HealthWorker getHealthWorkerById(int workerId) throws SQLException {
-        String sql = "SELECT hw.*, s.statusName FROM healthworker hw " +
+        String sql = "SELECT hw.*, s.statusName FROM worker hw " +
                     "JOIN REF_Status s ON hw.statusID = s.statusID " +
                     "WHERE hw.workerID = ? AND s.statusCategoryID = 2";
         
@@ -110,6 +109,9 @@ public class HealthWorkerCRUD {
             pstmt.setInt(1, workerId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
+                    int statusID = rs.getInt("workerStatus");
+                    Status status = StatusDAO.getStatusByID(conn, statusID);
+
                     return new HealthWorker(
                         rs.getInt("workerID"),
                         rs.getInt("facilityID"),
@@ -117,7 +119,7 @@ public class HealthWorkerCRUD {
                         rs.getString("firstName"),
                         rs.getString("position"), 
                         rs.getString("contactInformation"),
-                        convertStatusNameToEnum(rs.getString("statusName"))
+                        status
                     );
                 }
             }
@@ -127,7 +129,7 @@ public class HealthWorkerCRUD {
 
     public List<HealthWorker> getHealthWorkersByFacility(int facilityId) throws SQLException {
         List<HealthWorker> workers = new ArrayList<>();
-        String sql = "SELECT hw.*, s.statusName FROM healthworker hw " +
+        String sql = "SELECT hw.*, s.statusName FROM worker hw " +
                     "JOIN REF_Status s ON hw.statusID = s.statusID " +
                     "WHERE hw.facilityID = ? AND s.statusCategoryID = 2";
         
@@ -136,6 +138,9 @@ public class HealthWorkerCRUD {
             pstmt.setInt(1, facilityId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
+                    int statusID = rs.getInt("workerStatus");
+                    Status status = StatusDAO.getStatusByID(conn, statusID);
+
                     HealthWorker hw = new HealthWorker(
                         rs.getInt("workerID"),
                         rs.getInt("facilityID"),
@@ -143,30 +148,12 @@ public class HealthWorkerCRUD {
                         rs.getString("firstName"),
                         rs.getString("position"),
                         rs.getString("contactInformation"),
-                        convertStatusNameToEnum(rs.getString("statusName"))
+                        status
                     );
                     workers.add(hw);
                 }
             }
         }
         return workers;
-    }
-
-    private int convertStatusToID(HealthWorker.Status status) {
-        switch (status) {
-            case ACTIVE: return 4; 
-            case INACTIVE: return 5;
-            default: return 4; 
-        }
-    }
-
-    private HealthWorker.Status convertStatusNameToEnum(String statusName) {
-        if ("Active".equalsIgnoreCase(statusName)) {
-            return HealthWorker.Status.ACTIVE;
-        } else if ("Inactive".equalsIgnoreCase(statusName)) {
-            return HealthWorker.Status.INACTIVE;
-        } else {
-            return HealthWorker.Status.ACTIVE;
-        }
     }
 }
