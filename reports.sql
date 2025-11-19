@@ -1,5 +1,7 @@
+
+USE BHMS_DB;
 -- CONSULTATION SUMMARY REPORT (Assigned to ASHLEY) --
-CREATE VIEW ConsultationSummary_Week AS 
+CREATE OR REPLACE VIEW ConsultationSummary_Week AS 
 SELECT 
 	f.facilityName,
     YEAR(mc.consultationDate) AS year,
@@ -19,7 +21,7 @@ FROM medical_consultation mc JOIN facility f ON mc.facilityID = f.facilityID
 GROUP BY f.facilityName, YEAR(mc.consultationDate), WEEK(mc.consultationDate, 1)
 ORDER BY f.facilityName, year, week;
 
-CREATE VIEW ConsultationSummary_Month AS 
+CREATE OR REPLACE VIEW ConsultationSummary_Month AS 
 SELECT
 	f.facilityName,
     YEAR(mc.consultationDate) AS year,
@@ -39,7 +41,7 @@ FROM medical_consultation mc JOIN facility f ON mc.facilityID = f.facilityID
 GROUP BY f.facilityName, YEAR(mc.consultationDate), MONTH(mc.consultationDate)
 ORDER BY f.facilityName, year, month;
 
-CREATE VIEW ConsultationSummary_Year AS
+CREATE OR REPLACE VIEW ConsultationSummary_Year AS
 SELECT
     f.facilityName,
     YEAR(mc.consultationDate) AS year,
@@ -59,7 +61,7 @@ GROUP BY f.facilityName, YEAR(mc.consultationDate)
 ORDER BY f.facilityName, year;
 
 -- IMMUNIZATION IMPACT REPORT (Assigned to ASHLEY) --
-CREATE VIEW ImmunizationImpact_Week AS
+CREATE OR REPLACE VIEW ImmunizationImpact_Week AS
 SELECT
     f.facilityName,
     YEAR(ia.administrationDate) AS year,
@@ -80,7 +82,7 @@ FROM immunization_administration ia JOIN worker w ON ia.hWorkerID = w.hWorkerID
 GROUP BY f.facilityName, YEAR(ia.administrationDate), WEEK(ia.administrationDate, 1)
 ORDER BY f.facilityName, year, week;
 
-CREATE VIEW ImmunizationImpact_Month AS
+CREATE OR REPLACE VIEW ImmunizationImpact_Month AS
 SELECT
     f.facilityName,
     YEAR(ia.administrationDate) AS year,
@@ -102,7 +104,7 @@ FROM immunization_administration ia JOIN worker w ON ia.hWorkerID = w.hWorkerID
 GROUP BY f.facilityName, YEAR(ia.administrationDate), MONTH(ia.administrationDate)
 ORDER BY f.facilityName, year, month;
 
-CREATE VIEW ImmunizationImpact_Year AS
+CREATE OR REPLACE VIEW ImmunizationImpact_Year AS
 SELECT
     f.facilityName,
     YEAR(ia.administrationDate) AS year,
@@ -123,11 +125,13 @@ GROUP BY f.facilityName, YEAR(ia.administrationDate)
 ORDER BY f.facilityName, year;
 
 -- MEDICINE INVENTORY UTILIZATION REPORT (Assigned to RAPHY) --
-CREATE VIEW MedicineInventoryUtilization AS
+CREATE OR REPLACE VIEW MedicineInventoryUtilization AS
 SELECT
     f.facilityName,
     m.medicineName,
-    m.medicineType,
+    m.dosageForm,
+    m.strength,
+    m.batchNumber,
     DATE_FORMAT(pr.distributionDate, '%Y-%u') AS weekYear,
     DATE_FORMAT(pr.distributionDate, '%Y-%m') AS monthYear,
     YEAR(pr.distributionDate) AS year,
@@ -136,16 +140,16 @@ SELECT
     s.supplierName,
     SUM(ri.totalOrderCost) AS totalRestockCost
 FROM medicine m
-JOIN medicine_inventory mi ON m.medicineID = mi.medicineID
+JOIN medicine_inventory mi
+    ON m.medicineID = mi.medicineID
 JOIN facility f ON mi.facilityID = f.facilityID
 LEFT JOIN prescription_receipt pr ON pr.medicineID = m.medicineID
-	AND pr.facilityID = f.facilityID
-LEFT JOIN restock_invoice ri ON ri.supplierID - s.supplierID
-LEFT JOIN supplier s ON ri.supplierID - s.supplierID
-GROUP BY f.facilityName, m.medicineName, m.medicineType, weekYear, monthYear, year, s.supplierName, mi.quantityInStock;
+LEFT JOIN restock_invoice ri ON ri.supplierID IS NOT NULL  
+LEFT JOIN supplier s ON s.supplierID = ri.supplierID
+GROUP BY f.facilityName, m.medicineName, weekYear, monthYear, year, s.supplierName, mi.quantityInStock;
 
 -- DISEASE MONITORING REPORT (Assigned to SPENCER, CREATED BY ASHLEY) --
-CREATE VIEW DiseaseCaseMonitoring_Week AS
+CREATE OR REPLACE VIEW DiseaseCaseMonitoring_Week AS
 SELECT
     f.facilityID,
     f.facilityName,
@@ -159,7 +163,7 @@ WHERE mc.diagnosis IS NOT NULL AND mc.diagnosis <> ''
 GROUP BY f.facilityID, f.facilityName, YEAR(mc.consultationDate), WEEK(mc.consultationDate, 1), mc.diagnosis
 ORDER BY f.facilityName, year, week, diseaseType;
 
-CREATE VIEW DiseaseCaseMonitoring_Month AS
+CREATE OR REPLACE VIEW DiseaseCaseMonitoring_Month AS
 SELECT
     f.facilityID,
     f.facilityName,
@@ -173,7 +177,7 @@ WHERE mc.diagnosis IS NOT NULL AND mc.diagnosis <> ''
 GROUP BY f.facilityID, f.facilityName, YEAR(mc.consultationDate), MONTH(mc.consultationDate), mc.diagnosis
 ORDER BY f.facilityName, year, month, diseaseType;
 
-CREATE VIEW DiseaseCaseMonitoring_Year AS
+CREATE OR REPLACE VIEW DiseaseCaseMonitoring_Year AS
 SELECT
     f.facilityID,
     f.facilityName,
@@ -185,4 +189,3 @@ JOIN facility f ON mc.facilityID = f.facilityID
 WHERE mc.diagnosis IS NOT NULL AND mc.diagnosis <> ''
 GROUP BY f.facilityID, f.facilityName, YEAR(mc.consultationDate), mc.diagnosis
 ORDER BY f.facilityName, year, diseaseType;
-
