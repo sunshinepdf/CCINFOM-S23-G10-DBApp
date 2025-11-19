@@ -7,12 +7,12 @@ import java.awt.EventQueue;
 import java.awt.Toolkit;
 import java.sql.SQLException;
 
-public class DBApp {
+public class CCINFOMS2310DBAPP {
     private JFrame mainFrame;
     private JPanel contentPanel;
     private CardLayout cardLayout;
 
-    public DBApp(String userName) {
+    public CCINFOMS2310DBAPP(String userName) {
         initializeGUI(userName);
     }
 
@@ -127,7 +127,7 @@ public class DBApp {
         SwingUtilities.invokeLater(() -> {
             String userName = JOptionPane.showInputDialog("Enter your name:");
             if (userName != null && !userName.trim().isEmpty()) {
-                new DBApp(userName);
+                new CCINFOMS2310DBAPP(userName);
             } else {
                 System.exit(0);
             }

@@ -89,7 +89,7 @@ VALUES	('Paracetamol', 'Analgesic and antipyretic used to treat pain and fever. 
 		('Cetirizine', 'Antihistamine used to relieve allergy symptoms such as watery eyes, runny nose, itching, and sneezing.', 'Tablet', '10mg', 'CETI2024-003', 8),
 		('Metformin', 'Oral diabetes medicine that helps control blood sugar levels in patients with type 2 diabetes mellitus.', 'Tablet', '500mg', 'METF2024-004', 8),
 		('Salbutamol', 'Bronchodilator used to treat or prevent bronchospasm in patients with asthma or chronic obstructive pulmonary disease.', 'Syrup', '2mg/5mL', 'SALB2024-006', 8),
-		('Ibuprofen', 'Nonsteroidal anti-inflammatory drug used to reduce fever and treat pain or inflammation caused by conditions such as arthritis.', 'Tablet', '400mg', 'IBUP2024-007', 9),
+		('Ibuprofen', 'Nonsteroidal anti-inflammatory drug used to reduce fever and treat pain or inflammation caused by conditions such as arthritis.', 'Tablet', '400mg', 'IBUP2024-007', 8),
 		('Omeprazole', 'Proton pump inhibitor that decreases the amount of acid produced in the stomach, used to treat gastroesophageal reflux disease.', 'Capsule', '20mg', 'OMEP2024-008', 8),
 		('Lagundi', 'Herbal medicine used as an expectorant to relieve cough and asthma, and for the symptomatic relief of common cold and flu.', 'Syrup', '600mg/5mL', 'LAGU2024-010', 8),
 		('BCG Vaccine', 'Bacillus Calmette-Guerin vaccine used to prevent tuberculosis, especially in children. Part of DOH Expanded Program on Immunization.', 'Injectable', '0.05mL', 'BCG2024-011', 8),
