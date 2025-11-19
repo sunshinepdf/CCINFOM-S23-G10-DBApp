@@ -25,8 +25,8 @@ public class DBApp {
         contentPanel.add(new PatientPanel(), "PATIENTS");
         contentPanel.add(new MedicineInventoryPanel(), "MEDICINE");
         contentPanel.add(new HealthWorkerPanel(), "WORKERS");
-        contentPanel.add(createFacilityRecordsPanel(), "FACILITIES");
-        contentPanel.add(createSupplierRecordsPanel(), "SUPPLIERS");
+        contentPanel.add(new FacilityPanel(), "FACILITIES");
+        contentPanel.add(new SupplierPanel(), "SUPPLIERS");
 
         JPanel sidebar = createSidebar();
 
@@ -35,24 +35,6 @@ public class DBApp {
         mainFrame.add(contentPanel, BorderLayout.CENTER);
 
         mainFrame.setVisible(true);
-    }
-
-    private JPanel createHealthWorkerRecordsPanel() {
-        JPanel panel = new JPanel();
-        panel.add(new JLabel("Health Worker Records - Under Construction"));
-        return panel;
-    }
-
-    private JPanel createFacilityRecordsPanel() {
-        JPanel panel = new JPanel();
-        panel.add(new JLabel("Facility Records - Under Construction"));
-        return panel;
-    }
-
-    private JPanel createSupplierRecordsPanel() {
-        JPanel panel = new JPanel();
-        panel.add(new JLabel("Supplier Records - Under Construction"));
-        return panel;
     }
 
     private JPanel createSidebar() {
