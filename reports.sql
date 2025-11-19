@@ -125,15 +125,53 @@ GROUP BY f.facilityName, YEAR(ia.administrationDate)
 ORDER BY f.facilityName, year;
 
 -- MEDICINE INVENTORY UTILIZATION REPORT (Assigned to RAPHY) --
-CREATE OR REPLACE VIEW MedicineInventoryUtilization AS
+CREATE VIEW MedicineInventoryUtilization_Week AS
 SELECT
     f.facilityName,
     m.medicineName,
-    m.dosageForm,
-    m.strength,
-    m.batchNumber,
-    DATE_FORMAT(pr.distributionDate, '%Y-%u') AS weekYear,
-    DATE_FORMAT(pr.distributionDate, '%Y-%m') AS monthYear,
+    m.medicineType,
+    YEAR(pr.distributionDate) AS year,
+    WEEK(pr.distributionDate, 1) AS week,
+    SUM(pr.qtyDistributed) AS totalDistributed,
+    mi.quantityInStock AS currentStock,
+    s.supplierName,
+    SUM(ri.totalOrderCost) AS totalRestockCost
+FROM medicine m
+JOIN medicine_inventory mi ON m.medicineID = mi.medicineID
+JOIN facility f ON mi.facilityID = f.facilityID
+LEFT JOIN prescription_receipt pr ON pr.medicineID = m.medicineID
+    AND pr.facilityID = f.facilityID
+LEFT JOIN restock_invoice ri ON ri.supplierID = s.supplierID
+LEFT JOIN supplier s ON ri.supplierID = s.supplierID
+GROUP BY f.facilityName, m.medicineName, m.medicineType, YEAR(pr.distributionDate), WEEK(pr.distributionDate, 1), s.supplierName, mi.quantityInStock
+ORDER BY f.facilityName, m.medicineName, year, week;
+
+CREATE VIEW MedicineInventoryUtilization_Month AS
+SELECT
+    f.facilityName,
+    m.medicineName,
+    m.medicineType,
+    YEAR(pr.distributionDate) AS year,
+    MONTH(pr.distributionDate) AS month,
+    SUM(pr.qtyDistributed) AS totalDistributed,
+    mi.quantityInStock AS currentStock,
+    s.supplierName,
+    SUM(ri.totalOrderCost) AS totalRestockCost
+FROM medicine m
+JOIN medicine_inventory mi ON m.medicineID = mi.medicineID
+JOIN facility f ON mi.facilityID = f.facilityID
+LEFT JOIN prescription_receipt pr ON pr.medicineID = m.medicineID
+	AND pr.facilityID = f.facilityID
+LEFT JOIN restock_invoice ri ON ri.supplierID = s.supplierID
+LEFT JOIN supplier s ON ri.supplierID = s.supplierID
+GROUP BY f.facilityName, m.medicineName, m.medicineType, YEAR(pr.distributionDate), MONTH(pr.distributionDate), s.supplierName, mi.quantityInStock
+ORDER BY f.facilityName, m.medicineName, year, month;
+
+CREATE VIEW MedicineInventoryUtilization_Year AS
+SELECT
+    f.facilityName,
+    m.medicineName,
+    m.medicineType,
     YEAR(pr.distributionDate) AS year,
     SUM(pr.qtyDistributed) AS totalDistributed,
     mi.quantityInStock AS currentStock,
@@ -144,9 +182,11 @@ JOIN medicine_inventory mi
     ON m.medicineID = mi.medicineID
 JOIN facility f ON mi.facilityID = f.facilityID
 LEFT JOIN prescription_receipt pr ON pr.medicineID = m.medicineID
-LEFT JOIN restock_invoice ri ON ri.supplierID IS NOT NULL  
-LEFT JOIN supplier s ON s.supplierID = ri.supplierID
-GROUP BY f.facilityName, m.medicineName, weekYear, monthYear, year, s.supplierName, mi.quantityInStock;
+	AND pr.facilityID = f.facilityID
+LEFT JOIN restock_invoice ri ON ri.supplierID = s.supplierID
+LEFT JOIN supplier s ON ri.supplierID = s.supplierID
+GROUP BY f.facilityName, m.medicineName, m.medicineType, YEAR(pr.distributionDate), s.supplierName, mi.quantityInStock
+ORDER BY f.facilityName, m.medicineName, year;
 
 -- DISEASE MONITORING REPORT (Assigned to SPENCER, CREATED BY ASHLEY) --
 CREATE OR REPLACE VIEW DiseaseCaseMonitoring_Week AS
