@@ -42,7 +42,7 @@ VALUES	('Barangay Health Center Malolos', '123 Mabini Street, Barangay 112, Malo
 		('Barangay Health Center Pasay', '654 Harrison Road, Barangay 342, Pasay City', '09215262999', '06:30:00', '17:00:00', 1),
 		('Barangay Health Center Pasig', '987 Manalo Street, Barangay 109, Pasig City', '09221196524', '07:30:00', '16:30:00', 1),
 		('Barangay Health Center Aurora', '147 Ermitano Boulevard, Barangay 567, Aurora City', '09231969712', '08:00:00', '17:30:00', 2),
-		('Barangay Health Center Manila', '258 Roxas Avenue, Barangay 282, Manila City', '09240985672', '09:00:00', '18:00:00', 3),
+		('Barangay Health Center Manila', '258 Roxas Avenue, Barangay 282, Manila City', '09240985672', '09:00:00', '18:00:00', 1),
 		('Barangay Health Center Binan', '369 Mayon Road, Barangay 762, Binan City', '09257382281', '08:00:00', '17:00:00', 1),
 		('Barangay Health Center Sta. Ana', '741 Diamante Street, Barangay 192, Sta. Ana City', '09260657712', '07:00:00', '16:00:00', 1);
 
@@ -55,8 +55,8 @@ VALUES	('Dela Cruz', 'Ashanti Mae', 'Day Care Worker', '09171884564', 1, 4),
 		('Lim', 'Ramon', 'Barangay Health Worker', '09066789011', 3, 4),
 		('Tuazon', 'Mielle', 'RHU Midwife', '09257893053', 4, 4),
 		('Villanueva', 'Patrisha', 'Barangay Health Worker', '09248881230', 4, 5),
-		('Rizal', 'Sofia', 'Nurse', '09257382305', 5, 5),
-		('Granger', 'Akeirra', 'Barangay Nutrition Scholar', '09260093257', 6, 4);
+		('Rizal', 'Sofia', 'Nurse', '09257382305', 10, 4),
+		('Granger', 'Akeirra', 'Barangay Nutrition Scholar', '09260093257', 8, 4);
 
 
 INSERT IGNORE INTO patient (lastName, firstName, birthDate, gender, bloodType, address, primaryPhone, emergencyContact, patientStatusID) 
@@ -114,10 +114,10 @@ VALUES	(1, 1, 500, 13),
 		(4, 4, 180, 13),  
 		(5, 5, 45, 15),   
 		(6, 6, 80, 13),    
-		(7, 8, 0, 16),    
+		(7, 8, 53, 16),    
 		(8, 10, 200, 13),  
 		(9, 7, 35, 14),   
-		(10, 9, 0, 16); 
+		(10, 9, 100, 16); 
 
 INSERT IGNORE INTO medical_consultation (patientID, hWorkerID, facilityID, consultationDate, consultationTime, symptoms, diagnosis, prescription, consultationStatusID) 
 VALUES	(1, 3, 2, '2024-11-15', '09:30:00', 'Fever, headache, body aches for 2 days', 'Acute viral infection', 'Paracetamol 500mg, 1 tablet every 6 hours for 3 days. Increase fluid intake and rest.', 17),
@@ -127,9 +127,9 @@ VALUES	(1, 3, 2, '2024-11-15', '09:30:00', 'Fever, headache, body aches for 2 da
 		(5, 4, 2, '2024-11-18', '15:45:00', 'Difficulty breathing, wheezing, chest tightness', 'Acute asthma exacerbation', 'Salbutamol syrup 5mL every 6 hours as needed. Advise to avoid triggers. Emergency referral if worsens.', 17),
 		(6, 4, 2, '2024-11-19', '08:30:00', 'Abdominal pain, bloating, acid reflux', 'Gastroesophageal reflux disease (GERD)', 'Omeprazole 20mg, 1 capsule once daily before breakfast for 14 days. Avoid spicy foods and late meals.', 18),
 		(6, 5, 5, '2024-12-12', '13:00:00', 'Routine check-up, no complaints', 'Healthy - routine examination', 'No prescription needed. Maintain healthy lifestyle. Annual check-up recommended.', 17),
-		(1, 3, 2, '2024-12-24', '16:00:00', 'High fever, severe headache, muscle pain', 'Suspected dengue fever', 'Paracetamol for fever. Increase fluid intake. Complete blood count ordered. Refer to hospital if platelet count drops.', 19),
-		(9, 6, 3, '2024-12-27', '10:30:00', 'Joint pain, swelling in knees', 'Osteoarthritis', 'Ibuprofen 400mg, 1 tablet twice daily after meals. Apply warm compress. Physical therapy recommended.', 18),
-		(10, 7, 4, '2024-12-29', '14:00:00', 'Persistent cough with phlegm, chest discomfort', 'Acute bronchitis', 'Lagundi syrup 10mL three times daily. Amoxicillin 500mg three times daily for 5 days. Follow-up in 1 week.', 19);
+		(1, 3, 2, '2024-12-24', '16:00:00', 'High fever, severe headache, muscle pain', 'Suspected dengue fever', 'Paracetamol for fever. Increase fluid intake. Complete blood count ordered. Refer to hospital if platelet count drops.', 17),
+		(9, 6, 3, '2024-12-27', '10:30:00', 'Joint pain, swelling in knees', 'Osteoarthritis', 'Ibuprofen 400mg, 1 tablet twice daily after meals. Apply warm compress. Physical therapy recommended.', 17),
+		(10, 7, 4, '2024-12-29', '14:00:00', 'Persistent cough with phlegm, chest discomfort', 'Acute bronchitis', 'Lagundi syrup 10mL three times daily. Amoxicillin 500mg three times daily for 5 days. Follow-up in 1 week.', 17);
 
 UPDATE medicine_inventory mi
 JOIN REF_Status s 
@@ -157,14 +157,16 @@ VALUES	(1, 1, 2, 3, '2024-11-15', 18, TRUE, TRUE, 20),
 		(9, 9, 3, 6, '2024-12-27', 15, TRUE, TRUE, 20);
 
 INSERT IGNORE INTO immunization_administration (patientID, medicineID, hWorkerID, administrationDate, vaccineType, dosageNumber, nextVaccinationDate, immunizationStatusID, sideEffects) 
-VALUES	(1, 9, 1, '2024-10-15', 'BCG', 1, NULL, 23, 'Mild redness at injection site'),
-		(2, 9, 3, '2024-10-20', 'BCG', 1, NULL, 23, 'None'),
-		(3, 10, 6, '2024-09-12', 'MMR', 1, '2025-09-12', 23, 'Low-grade fever for 1 day'),
-		(4, 10, 6, '2024-11-05', 'MMR', 1, '2025-11-05', 23, 'None'),
-		(5, 9, 9, '2024-11-18', 'BCG', 1, NULL, 23, 'Slight swelling'),
-		(6, 10, 1, '2024-08-20', 'MMR', 1, '2025-08-20', 23, 'None'),
-		(7, 9, 3, '2024-07-10', 'BCG', 1, NULL, 25, 'None'),
-		(8, 10, 3, '2023-12-15', 'MMR', 1, '2024-12-15', 24, 'Mild rash'),
-		(9, 9, 6, '2024-11-25', 'BCG', 1, NULL, 23, 'None'),
-		(10, 10, 1, '2024-09-30', 'MMR', 1, '2025-09-30', 23, 'Low-grade fever');
+VALUES	(1, 9,  9, '2024-10-15', 'BCG', 1, NULL, 23, 'Mild redness at injection site'),
+(2, 9,  9, '2024-10-20', 'BCG', 1, NULL, 23, 'None'),
+(5, 9,  9, '2024-11-18', 'BCG', 1, NULL, 23, 'Slight swelling'),
+(7, 9,  9, '2024-07-10', 'BCG', 1, NULL, 25, 'None'),
+(9, 9,  9, '2024-11-25', 'BCG', 1, NULL, 23, 'None'),
+(3, 10, 10, '2024-09-12', 'MMR', 1, '2025-09-12', 23, 'Low-grade fever for 1 day'),
+(4, 10, 10, '2024-11-05', 'MMR', 1, '2025-11-05', 23, 'None'),
+(6, 10, 10, '2024-08-20', 'MMR', 1, '2025-08-20', 23, 'None'),
+(8, 10, 10, '2023-12-15', 'MMR', 1, '2024-12-15', 24, 'Mild rash'),
+(10,10, 10, '2024-09-30', 'MMR', 1, '2025-09-30', 23, 'Low-grade fever');
+
+
 
