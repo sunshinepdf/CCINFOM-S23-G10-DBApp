@@ -6,14 +6,14 @@ import java.util.List;
 
 public class PatientCRUD {
 
-    // [KHYLE] Edited to use per-method connections (open/close within each method)
+    // [EDITS] Edited to use per-method connections (open/close within each method)
 
     //create
     public void create(Patient p) throws SQLException{
         String sql = "INSERT INTO patient(lastName, firstName, birthDate, " +
                 "gender, bloodType, address, primaryPhone, emergencyContact, patientStatus) " +
                 "VALUES(?,?,?,?,?,?,?,?,?)";
-        //[KHYLE]: Rafactored the connection portion to prevent long-live connection leaks
+        //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
         try (Connection conn = DBConnection.connectDB();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -36,7 +36,7 @@ public class PatientCRUD {
         List<Patient> patients = new ArrayList<>();
         String sql = "SELECT * FROM patient";
 
-        //[KHYLE]: Rafactored the connection portion to prevent long-live connection leaks
+        //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
         try (Connection conn = DBConnection.connectDB();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -68,7 +68,7 @@ public class PatientCRUD {
         String sql = "UPDATE patient SET lastName=?, firstName=?, birthDate=?, gender=?, " +
                 "bloodType=?, address=?, primaryPhone=?, emergencyContact=?, patientStatus=?" +
                 " WHERE patientID=?";
-        //[KHYLE]: Rafactored the connection portion to prevent long-live connection leaks
+        //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
         try (Connection conn = DBConnection.connectDB();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, p.getLastName());
