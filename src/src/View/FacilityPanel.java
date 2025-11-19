@@ -5,6 +5,13 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.sql.Time;
+import java.sql.Connection;
+import java.util.List;
+import java.util.Map;
+import javax.swing.SwingUtilities;
+
+import Model.DBConnection;
+import Model.ViewDAO;
 import Model.Status;
 import Controller.FacilityController;
 import Service.FacilityService;
@@ -49,11 +56,13 @@ public class FacilityPanel extends JPanel {
         JPanel buttonPanel = new JPanel(new FlowLayout());
         JButton addButton = new JButton("Add Facility");
         JButton editButton = new JButton("Edit Facility");
+        JButton viewButton = new JButton("View");
         JButton deleteButton = new JButton("Delete Facility");
         JButton refreshButton = new JButton("Refresh");
 
         buttonPanel.add(addButton);
         buttonPanel.add(editButton);
+        buttonPanel.add(viewButton);
         buttonPanel.add(deleteButton);
         buttonPanel.add(refreshButton);
 
@@ -89,6 +98,24 @@ public class FacilityPanel extends JPanel {
         scrollPane.setPreferredSize(new Dimension(1200, 400));
 
         addButton.addActionListener(e -> showAddFacilityDialog());
+        viewButton.addActionListener(e -> {
+            showLoading(true);
+            new Thread(() -> {
+                try (Connection conn = DBConnection.getConnection()) {
+                    ViewDAO vdao = new ViewDAO(conn);
+                    List<Map<String, Object>> rows = vdao.getFacilityDetails();
+                    SwingUtilities.invokeLater(() -> {
+                        View.ViewDialog.showView(this, "Facility Details View", rows);
+                        showLoading(false);
+                    });
+                } catch (Exception ex) {
+                    SwingUtilities.invokeLater(() -> {
+                        showLoading(false);
+                        showError("Error loading view: " + ex.getMessage());
+                    });
+                }
+            }).start();
+        });
         refreshButton.addActionListener(e -> loadFacilityData());
         deleteButton.addActionListener(e -> deleteSelectedFacility());
         editButton.addActionListener(e -> editSelectedFacility());
