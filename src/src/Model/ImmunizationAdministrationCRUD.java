@@ -9,8 +9,7 @@ import java.util.List;
 
 public class ImmunizationAdministrationCRUD {
 
-    private Connection conn = DBConnection.getConnection();
-    StatusDAO statusDAO = new StatusDAO(conn);
+    // Use per-method connections (open/close within each method)
 
     //create
     public void create(ImmunizationAdministration ia) throws SQLException{
@@ -18,8 +17,9 @@ public class ImmunizationAdministrationCRUD {
                 "hWorkerID, administrationDate, vaccineType, dosageNumber, " +
                 "nextVaccinationDate, immunizationStatus, sideEffects) VALUES " +
                 "(?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)){
+         //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
+        try (Connection conn = DBConnection.connectDB();
+            PreparedStatement pstmt = conn.prepareStatement(sql)){
             pstmt.setInt(1, ia.getPatientID());
             pstmt.setInt(2, ia.getMedicineID());
             pstmt.setInt(3, ia.gethWorkerID());
@@ -39,12 +39,14 @@ public class ImmunizationAdministrationCRUD {
         List<ImmunizationAdministration> list = new ArrayList<>();
         String sql = "SELECT * FROM immunization_administration";
 
-        try (PreparedStatement pstmt = conn.prepareStatement(sql);
+        //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()){
 
             while (rs.next()) {
                 int statusID = rs.getInt("immunizationStatus");
-                Status status = statusDAO.getStatusByID(statusID);
+                Status status = StatusDAO.getStatusByID(conn, statusID);
 
                 ImmunizationAdministration ia = new ImmunizationAdministration(
                         rs.getInt("immunizationID"),
@@ -70,8 +72,9 @@ public class ImmunizationAdministrationCRUD {
                 "hWorkerID=?, administrationDate=?, vaccineType=?, dosageNumber=?, " +
                 "nextVaccinationDate=?, immunizationStatus=?, sideEffects=? " +
                 "WHERE immunizationID=?";
-
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, ia.getPatientID());
             pstmt.setInt(2, ia.getMedicineID());
             pstmt.setInt(3, ia.gethWorkerID());
@@ -88,9 +91,12 @@ public class ImmunizationAdministrationCRUD {
     }
 
     //delete
+    //TODO: Update Delete system to use update status instead of hard delete
     public void delete(int id) throws SQLException {
         String sql = "DELETE FROM immunization_administration WHERE immunizationID=?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
 
             pstmt.executeUpdate();

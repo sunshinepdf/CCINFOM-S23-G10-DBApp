@@ -7,7 +7,7 @@ import java.util.Date;
 
 public class MedicineInventoryCRUD {
 
-    private Connection conn = DBConnection.getConnection();
+    // [EDITS] Edited to use per-method connections (open/close within each method)
 
     private String calculateStatus(int quantity, java.sql.Date expiryDate) {
         java.util.Date currentUtilDate = new java.util.Date();
@@ -31,8 +31,9 @@ public class MedicineInventoryCRUD {
         String sql = "INSERT INTO medicines(medicine_name, medicine_type, description, " +
                 "quantity_in_stock, expiry_date, status) " +
                 "VALUES(?,?,?,?,?,?)";
-
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, m.getMedicineName());
             pstmt.setString(2, m.getMedicineType().getLabel());
             pstmt.setString(3, m.getDescription());
@@ -50,7 +51,9 @@ public class MedicineInventoryCRUD {
         List<MedicineInventory> medicines = new ArrayList<>();
         String sql = "SELECT * FROM medicines";
 
-        try (Statement stmt = conn.createStatement();
+         //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
+        try (Connection conn = DBConnection.connectDB();
+             Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
@@ -75,7 +78,9 @@ public class MedicineInventoryCRUD {
                 "quantity_in_stock=?, expiry_date=?, status=? " +
                 "WHERE medicine_id=?";
         
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, m.getMedicineName());
             pstmt.setString(2, m.getMedicineType().getLabel());
             pstmt.setString(3, m.getDescription());
@@ -93,7 +98,9 @@ public class MedicineInventoryCRUD {
     public void delete(int id) throws SQLException {
         String sql = "DELETE FROM medicines WHERE medicine_id = ?";
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+         //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
             stmt.executeUpdate();
         }
@@ -105,8 +112,10 @@ public class MedicineInventoryCRUD {
                     "WHEN quantity_in_stock = 0 THEN 'Out of Stock' " +
                     "WHEN quantity_in_stock <= 10 THEN 'Low Stock' " +
                     "ELSE 'Available' END";
-        
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                    
+         //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.executeUpdate();
         }
     }

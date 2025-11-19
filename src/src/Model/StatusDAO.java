@@ -7,61 +7,52 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class StatusDAO {
-    private Connection conn;
+public final class StatusDAO {
 
-    public StatusDAO(Connection conn) {
-        this.conn = conn;
-    }
+    private StatusDAO() { /* utility class */ }
 
-    //get all statuses
-    public List<Status> getStatusByCategory (String categoryName) throws SQLException {
-        String sql = "SELECT s.statusID, s.statusCategoryID, s.statusName" +
-                "FROM REF_Status s" +
-                "JOIN REF_StatusCategory c ON s.statusCategoryID = c.statusCategoryID" +
-                "WHERE c.categoryName = ?";
+    public static List<Status> getStatusByCategory(Connection conn, String categoryName) throws SQLException {
+        String sql = "SELECT s.statusID, s.statusCategoryID, s.statusName " +
+                     "FROM REF_Status s " +
+                     "JOIN REF_StatusCategory c ON s.statusCategoryID = c.statusCategoryID " +
+                     "WHERE c.categoryName = ?";
 
-        PreparedStatement ps = conn.prepareStatement(sql);
-        ps.setString(1, categoryName);
-
-        ResultSet rs = ps.executeQuery();
-
-        List<Status> statusList = new ArrayList<>();
-        while (rs.next()) {
-            Status status = new Status(
-                    rs.getInt("statusID"),
-                    rs.getInt("statusCategoryID"),
-                    rs.getString("statusName")
-            );
-            statusList.add(status);
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, categoryName);
+            try (ResultSet rs = ps.executeQuery()) {
+                List<Status> statusList = new ArrayList<>();
+                while (rs.next()) {
+                    statusList.add(new Status(
+                        rs.getInt("statusID"),
+                        rs.getInt("statusCategoryID"),
+                        rs.getString("statusName")
+                    ));
+                }
+                return statusList;
+            }
         }
-        return statusList;
     }
 
-    //convert ID to status name
-    public String getStatusName (int id) throws SQLException {
+    public static String getStatusName(Connection conn, int id) throws SQLException {
         String sql = "SELECT statusName FROM REF_Status WHERE statusID = ?";
-        PreparedStatement ps = conn.prepareStatement(sql);
-        ps.setInt(1, id);
-
-        ResultSet rs = ps.executeQuery();
-        if (rs.next()) {
-            return rs.getString("statusName");
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getString("statusName") : null;
+            }
         }
-
-        return null;
     }
 
-    public Status getStatusByID(int statusID) throws SQLException {
+    public static Status getStatusByID(Connection conn, int statusID) throws SQLException {
         String sql = "SELECT statusID, statusCategoryID, statusName FROM REF_Status WHERE statusID = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, statusID);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return new Status(
-                            rs.getInt("statusID"),
-                            rs.getInt("statusCategoryID"),
-                            rs.getString("statusName")
+                        rs.getInt("statusID"),
+                        rs.getInt("statusCategoryID"),
+                        rs.getString("statusName")
                     );
                 }
             }
