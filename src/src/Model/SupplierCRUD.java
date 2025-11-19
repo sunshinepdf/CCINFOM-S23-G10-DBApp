@@ -8,8 +8,8 @@ public class SupplierCRUD {
 
     // create
     public void create(Supplier supplier) throws SQLException {
-        String sql = "INSERT INTO supplier(supplierName, address, contactDetails, supplierType, deliveryLeadTime, transactionDetails, statusID) " +
-                "VALUES(?,?,?,?,?,?,?)";
+        String sql = "INSERT INTO supplier(supplierName, supplierAddress, supplierContactNum, supplierType, deliveryLeadTime, transactionDetails, supplierStatusID) " +
+            "VALUES(?,?,?,?,?,?,?)";
 
         try (Connection conn = DBConnection.connectDB();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -29,22 +29,22 @@ public class SupplierCRUD {
     public List<Supplier> readAll() throws SQLException {
         List<Supplier> suppliers = new ArrayList<>();
         String sql = "SELECT s.*, st.statusName FROM supplier s " +
-                    "JOIN REF_Status st ON s.statusID = st.statusID " +
-                    "WHERE st.statusCategoryID = 5"; 
+            "JOIN REF_Status st ON s.supplierStatusID = st.statusID " +
+            "WHERE st.statusCategoryID = 5";
 
         try (Connection conn = DBConnection.connectDB();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                int statusID = rs.getInt("statusID");
+                int statusID = rs.getInt("supplierStatusID");
                 Status status = StatusDAO.getStatusByID(conn, statusID);
 
                 Supplier supplier = new Supplier(
                     rs.getInt("supplierID"),
                     rs.getString("supplierName"),
-                    rs.getString("address"),
-                    rs.getString("contactDetails"),
+                    rs.getString("supplierAddress"),
+                    rs.getString("supplierContactNum"),
                     rs.getString("supplierType"),
                     rs.getInt("deliveryLeadTime"),
                     rs.getString("transactionDetails"),
@@ -58,9 +58,9 @@ public class SupplierCRUD {
 
     // update
     public void update(Supplier supplier) throws SQLException {
-        String sql = "UPDATE supplier SET supplierName=?, address=?, contactDetails=?, " +
-                "supplierType=?, deliveryLeadTime=?, transactionDetails=?, statusID=? " +
-                "WHERE supplierID=?";
+        String sql = "UPDATE supplier SET supplierName=?, supplierAddress=?, supplierContactNum=?, " +
+            "supplierType=?, deliveryLeadTime=?, transactionDetails=?, supplierStatusID=? " +
+            "WHERE supplierID=?";
         
         try (Connection conn = DBConnection.connectDB();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -79,7 +79,7 @@ public class SupplierCRUD {
 
     // soft delete
     public void softDelete(int supplierId) throws SQLException {
-        String sql = "UPDATE supplier SET statusID = ? WHERE supplierID = ?";
+        String sql = "UPDATE supplier SET supplierStatusID = ? WHERE supplierID = ?";
         
         try (Connection conn = DBConnection.connectDB();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -90,7 +90,7 @@ public class SupplierCRUD {
     }
    
     public void restore(int supplierId) throws SQLException {
-        String sql = "UPDATE supplier SET statusID = ? WHERE supplierID = ?";
+        String sql = "UPDATE supplier SET supplierStatusID = ? WHERE supplierID = ?";
         
         try (Connection conn = DBConnection.connectDB();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -102,22 +102,22 @@ public class SupplierCRUD {
 
     public Supplier getSupplierById(int supplierId) throws SQLException {
         String sql = "SELECT s.*, st.statusName FROM supplier s " +
-                    "JOIN REF_Status st ON s.statusID = st.statusID " +
-                    "WHERE s.supplierID = ? AND st.statusCategoryID = 5";
+            "JOIN REF_Status st ON s.supplierStatusID = st.statusID " +
+            "WHERE s.supplierID = ? AND st.statusCategoryID = 5";
         
         try (Connection conn = DBConnection.connectDB();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, supplierId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    int statusID = rs.getInt("statusID");
+                    int statusID = rs.getInt("supplierStatusID");
                     Status status = StatusDAO.getStatusByID(conn, statusID);
 
                     return new Supplier(
                         rs.getInt("supplierID"),
                         rs.getString("supplierName"),
-                        rs.getString("address"),
-                        rs.getString("contactDetails"),
+                        rs.getString("supplierAddress"),
+                        rs.getString("supplierContactNum"),
                         rs.getString("supplierType"),
                         rs.getInt("deliveryLeadTime"),
                         rs.getString("transactionDetails"),
