@@ -27,7 +27,7 @@ public class ConsultationCRUD {
         }
 
         // INSERT consultation
-        String sql = "INSERT INTO consultation(patientID, hWorkerID, facilityID, consultationDate, " +
+        String sql = "INSERT INTO medical_consultation(patientID, hWorkerID, facilityID, consultationDate, " +
                      "consultationTime, symptoms, diagnosis, prescription, statusID) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.connectDB();
@@ -48,8 +48,8 @@ public class ConsultationCRUD {
     // READ all the consultations
     public List<Consultation> readAll() throws SQLException {
         List<Consultation> consultations = new ArrayList<>();
-        String sql = "SELECT c.*, s.statusName FROM consultation c " +
-                     "JOIN REF_Status s ON c.statusID = s.statusID " +
+        String sql = "SELECT c.*, s.statusName FROM medical_consultation c " +
+                     "JOIN REF_Status s ON c.consultationStatusID = s.statusID " +
                      "WHERE s.statusCategoryID = 7";
 
         try (Connection conn = DBConnection.connectDB();
@@ -76,8 +76,8 @@ public class ConsultationCRUD {
 
     // READ by ID
     public Consultation getById(int consultationID) throws SQLException {
-        String sql = "SELECT c.*, s.statusName FROM consultation c " +
-                     "JOIN REF_Status s ON c.statusID = s.statusID " +
+        String sql = "SELECT c.*, s.statusName FROM medical_consultation c " +
+                     "JOIN REF_Status s ON c.consultationStatusID = s.statusID " +
                      "WHERE c.consultationID = ? AND s.statusCategoryID = 7";
         try (Connection conn = DBConnection.connectDB();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -108,9 +108,9 @@ public class ConsultationCRUD {
             throw new SQLException("Consultation time is outside facility operating hours.");
         }
 
-        String sql = "UPDATE consultation SET patientID=?, hWorkerID=?, facilityID=?, " +
+        String sql = "UPDATE medical_consultation SET patientID=?, hWorkerID=?, facilityID=?, " +
                      "consultationDate=?, consultationTime=?, symptoms=?, diagnosis=?, " +
-                     "prescription=?, statusID=? WHERE consultationID=?";
+                     "prescription=?, consultationStatusID=? WHERE consultationID=?";
         try (Connection conn = DBConnection.connectDB();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, consultation.getPatientID());
@@ -129,7 +129,7 @@ public class ConsultationCRUD {
 
     // SOFT DELETE (archive)
     public void archive(int consultationID) throws SQLException {
-        String sql = "UPDATE consultation SET statusID = ? WHERE consultationID=?";
+        String sql = "UPDATE medical_consultation SET consultationStatusID = ? WHERE consultationID=?";
         try (Connection conn = DBConnection.connectDB();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, 3); // Archived
@@ -140,7 +140,7 @@ public class ConsultationCRUD {
 
     // RESTORE
     public void restore(int consultationID) throws SQLException {
-        String sql = "UPDATE consultation SET statusID = ? WHERE consultationID=?";
+        String sql = "UPDATE medical_consultation SET consultationStatusID = ? WHERE consultationID=?";
         try (Connection conn = DBConnection.connectDB();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, 2); // Pending
