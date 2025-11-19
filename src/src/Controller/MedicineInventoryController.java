@@ -16,16 +16,56 @@ public class MedicineInventoryController extends BaseController {
     public void loadMedicines() {
         view.showLoading(true);
         executeInBackground(
-                () -> service.listAll(),
+                () -> {
+                    try (java.sql.Connection conn = Model.DBConnection.getConnection()) {
+                        Model.ViewDAO vdao = new Model.ViewDAO(conn);
+                        java.util.List<java.util.Map<String, Object>> rows = vdao.getMedicineInventoryStatus();
+                        return Service.ServiceResult.ok(rows);
+                    } catch (Exception e) {
+                        return Service.ServiceResult.fail(e.getMessage());
+                    }
+                },
                 res -> {
                     view.showLoading(false);
-                    if (!res.isSuccess()) {
-                        view.showError("Error loading medicines: " + res.getError());
+                    if (!res.isSuccess() || res.getData() == null || res.getData().isEmpty()) {
+                        // fallback to service.listAll()
+                        executeInBackground(
+                                () -> service.listAll(),
+                                res2 -> {
+                                    view.showLoading(false);
+                                    if (!res2.isSuccess()) {
+                                        view.showError("Error loading medicines: " + res2.getError());
+                                        return;
+                                    }
+                                    view.showMedicines(res2.getData());
+                                },
+                                thr2 -> { view.showLoading(false); view.showError("Unexpected error loading medicines: " + thr2.getMessage()); },
+                                null,
+                                null
+                        );
                         return;
                     }
-                    view.showMedicines(res.getData());
+                    // success: show view rows
+                    view.showMedicineInventoryView(res.getData());
                 },
-                thr -> { view.showLoading(false); view.showError("Unexpected error loading medicines: " + thr.getMessage()); },
+                thr -> {
+                    view.showLoading(false);
+                    // fallback to service.listAll()
+                    executeInBackground(
+                            () -> service.listAll(),
+                            res2 -> {
+                                view.showLoading(false);
+                                if (!res2.isSuccess()) {
+                                    view.showError("Error loading medicines: " + res2.getError());
+                                    return;
+                                }
+                                view.showMedicines(res2.getData());
+                            },
+                            thr2 -> { view.showLoading(false); view.showError("Unexpected error loading medicines: " + thr2.getMessage()); },
+                            null,
+                            null
+                    );
+                },
                 null,
                 null
         );
