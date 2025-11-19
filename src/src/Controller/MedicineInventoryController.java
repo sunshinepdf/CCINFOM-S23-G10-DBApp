@@ -50,6 +50,25 @@ public class MedicineInventoryController extends BaseController {
         );
     }
 
+    public void updateMedicine(MedicineInventory m) {
+        view.showLoading(true);
+        executeInBackground(
+                () -> service.update(m),
+                res -> {
+                    view.showLoading(false);
+                    if (!res.isSuccess()) {
+                        view.showError("Error updating medicine: " + res.getError());
+                        return;
+                    }
+                    view.showInfo("Medicine updated successfully");
+                    loadMedicines();
+                },
+                thr -> { view.showLoading(false); view.showError("Unexpected error updating medicine: " + thr.getMessage()); },
+                null,
+                null
+        );
+    }
+
     public void deleteMedicine(int id) {
         view.showLoading(true);
         executeInBackground(
