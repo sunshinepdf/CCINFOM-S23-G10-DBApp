@@ -1,5 +1,9 @@
 package View;
 
+import Controller.PrescriptionController;
+import Service.PrescriptionService;
+import Model.Prescription;
+
 import Model.DBConnection;
 import Model.PrescriptionCRUD;
 
@@ -16,10 +20,18 @@ public class PrescriptionPanel extends JPanel {
     private JTable table;
     private DefaultTableModel tableModel;
     private JTextField searchField;
+    private PrescriptionController controller;
 
     public PrescriptionPanel() {
-        initializePanel();
-        loadPrescriptionData();
+        try {
+            PrescriptionService service = new PrescriptionService();
+            initializePanel();
+            controller = new PrescriptionController(this, service);
+            controller.loadPrescriptions();
+        } catch (Exception e) {
+            initializePanel();
+            loadPrescriptionData();
+        }
     }
 
     private void initializePanel() {
@@ -60,8 +72,10 @@ public class PrescriptionPanel extends JPanel {
         table = new JTable(tableModel);
         setColumnWidths();
 
-        add(header, BorderLayout.NORTH);
-        add(searchPanel, BorderLayout.BEFORE_FIRST_LINE);
+        JPanel northPanel = new JPanel(new BorderLayout());
+        northPanel.add(header, BorderLayout.NORTH);
+        northPanel.add(searchPanel, BorderLayout.SOUTH);
+        add(northPanel, BorderLayout.NORTH);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
         refreshBtn.addActionListener(e -> loadPrescriptionData());
@@ -82,9 +96,15 @@ public class PrescriptionPanel extends JPanel {
     }
 
     public void loadPrescriptionData() {
-        try (Connection conn = DBConnection.connectDB()) {
-            PrescriptionCRUD crud = new PrescriptionCRUD(conn);
-            crud.loadPrescriptions(tableModel);
+        try {
+            if (controller != null) {
+                controller.loadPrescriptions();
+                return;
+            }
+            try (Connection conn = DBConnection.connectDB()) {
+                PrescriptionCRUD crud = new PrescriptionCRUD(conn);
+                crud.loadPrescriptions(tableModel);
+            }
         } catch (SQLException e) {
             ErrorDialog.showError("Error loading prescriptions: " + e.getMessage());
         }
@@ -123,24 +143,26 @@ public class PrescriptionPanel extends JPanel {
                 boolean valid = validBox.isSelected();
                 boolean inv = invBox.isSelected();
                 int status = Integer.parseInt(statusField.getText().trim());
-                String sql = "INSERT INTO prescription_receipt (patientID, consultationID, medicineID, hWorkerID, distributionDate, qtyDistributed, isValidPrescription, inventoryUpdated, prescriptionStatusID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-                try (Connection conn = DBConnection.connectDB();
-                     java.sql.PreparedStatement stmt = conn.prepareStatement(sql)) {
-                    stmt.setInt(1, patientID);
-                    stmt.setInt(2, consultID);
-                    stmt.setInt(3, medID);
-                    stmt.setInt(4, hwID);
-                    stmt.setDate(5, distDate);
-                    stmt.setInt(6, qty);
-                    stmt.setBoolean(7, valid);
-                    stmt.setBoolean(8, inv);
-                    stmt.setInt(9, status);
-                    int rows = stmt.executeUpdate();
-                    if (rows > 0) {
-                        loadPrescriptionData();
-                        ErrorDialog.showInfo("Prescription added");
-                    } else {
-                        ErrorDialog.showError("Failed to add prescription");
+
+                Prescription pres = new Prescription(patientID, consultID, medID, hwID, distDate, qty, valid, inv, status);
+                if (controller != null) {
+                    controller.addPrescription(pres);
+                } else {
+                    String sql = "INSERT INTO prescription_receipt (patientID, consultationID, medicineID, hWorkerID, distributionDate, qtyDistributed, isValidPrescription, inventoryUpdated, prescriptionStatusID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    try (Connection conn = DBConnection.connectDB();
+                         java.sql.PreparedStatement stmt = conn.prepareStatement(sql)) {
+                        stmt.setInt(1, patientID);
+                        stmt.setInt(2, consultID);
+                        stmt.setInt(3, medID);
+                        stmt.setInt(4, hwID);
+                        stmt.setDate(5, distDate);
+                        stmt.setInt(6, qty);
+                        stmt.setBoolean(7, valid);
+                        stmt.setBoolean(8, inv);
+                        stmt.setInt(9, status);
+                        int rows = stmt.executeUpdate();
+                        if (rows > 0) { loadPrescriptionData(); ErrorDialog.showInfo("Prescription added"); }
+                        else ErrorDialog.showError("Failed to add prescription");
                     }
                 }
             } catch (NumberFormatException nfe) {
@@ -197,25 +219,28 @@ public class PrescriptionPanel extends JPanel {
                 boolean nvalid = validBox.isSelected();
                 boolean ninv = invBox.isSelected();
                 int nstatus = Integer.parseInt(statusField.getText().trim());
-                String sql = "UPDATE prescription_receipt SET patientID=?, consultationID=?, medicineID=?, hWorkerID=?, distributionDate=?, qtyDistributed=?, isValidPrescription=?, inventoryUpdated=?, prescriptionStatusID=? WHERE receiptID=?";
-                try (Connection conn = DBConnection.connectDB();
-                     java.sql.PreparedStatement stmt = conn.prepareStatement(sql)) {
-                    stmt.setInt(1, npatient);
-                    stmt.setInt(2, nconsult);
-                    stmt.setInt(3, nmed);
-                    stmt.setInt(4, nhw);
-                    stmt.setDate(5, ndate);
-                    stmt.setInt(6, nqty);
-                    stmt.setBoolean(7, nvalid);
-                    stmt.setBoolean(8, ninv);
-                    stmt.setInt(9, nstatus);
-                    stmt.setInt(10, receiptID);
-                    int rows = stmt.executeUpdate();
-                    if (rows > 0) {
-                        loadPrescriptionData();
-                        ErrorDialog.showInfo("Prescription updated");
-                    } else {
-                        ErrorDialog.showError("Failed to update prescription");
+
+                Prescription pres = new Prescription(npatient, nconsult, nmed, nhw, ndate, nqty, nvalid, ninv, nstatus);
+                pres.setReceiptID(receiptID);
+                if (controller != null) {
+                    controller.updatePrescription(pres);
+                } else {
+                    String sql = "UPDATE prescription_receipt SET patientID=?, consultationID=?, medicineID=?, hWorkerID=?, distributionDate=?, qtyDistributed=?, isValidPrescription=?, inventoryUpdated=?, prescriptionStatusID=? WHERE receiptID=?";
+                    try (Connection conn = DBConnection.connectDB();
+                         java.sql.PreparedStatement stmt = conn.prepareStatement(sql)) {
+                        stmt.setInt(1, npatient);
+                        stmt.setInt(2, nconsult);
+                        stmt.setInt(3, nmed);
+                        stmt.setInt(4, nhw);
+                        stmt.setDate(5, ndate);
+                        stmt.setInt(6, nqty);
+                        stmt.setBoolean(7, nvalid);
+                        stmt.setBoolean(8, ninv);
+                        stmt.setInt(9, nstatus);
+                        stmt.setInt(10, receiptID);
+                        int rows = stmt.executeUpdate();
+                        if (rows > 0) { loadPrescriptionData(); ErrorDialog.showInfo("Prescription updated"); }
+                        else ErrorDialog.showError("Failed to update prescription");
                     }
                 }
             } catch (NumberFormatException nfe) {
@@ -232,6 +257,8 @@ public class PrescriptionPanel extends JPanel {
         int receiptID = (int) tableModel.getValueAt(row,0);
         int confirm = JOptionPane.showConfirmDialog(this, "Archive prescription ID " + receiptID + "?", "Confirm", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
+            if (controller != null) controller.archivePrescription(receiptID);
+            else {
                 try (Connection conn = DBConnection.connectDB();
                      java.sql.PreparedStatement stmt = conn.prepareStatement("UPDATE prescription_receipt SET prescriptionStatusID = ? WHERE receiptID = ?")) {
                     stmt.setInt(1, 8); // archived status id per CRUD
@@ -240,6 +267,7 @@ public class PrescriptionPanel extends JPanel {
                     if (rows > 0) { loadPrescriptionData(); ErrorDialog.showInfo("Archived"); }
                     else ErrorDialog.showError("Failed to archive");
                 } catch (SQLException e) { ErrorDialog.showError(e.getMessage()); }
+            }
         }
     }
 

@@ -1,7 +1,8 @@
 package View;
 
+import Controller.ImmunizationAdministrationController;
+import Service.ImmunizationAdministrationService;
 import Model.ImmunizationAdministration;
-import Model.ImmunizationAdministrationCRUD;
 import Model.Status;
 
 import javax.swing.*;
@@ -9,16 +10,24 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.sql.Date;
-import java.sql.SQLException;
 
 public class ImmunizationAdministrationPanel extends JPanel {
     private JTable table;
     private DefaultTableModel tableModel;
     private JTextField searchField;
+    private ImmunizationAdministrationController controller;
 
     public ImmunizationAdministrationPanel() {
-        initializePanel();
-        loadData();
+        try {
+            ImmunizationAdministrationService service = new ImmunizationAdministrationService();
+            initializePanel();
+            controller = new ImmunizationAdministrationController(this, service);
+            controller.loadAll();
+        } catch (Exception e) {
+            System.out.println("Database not available - using demo mode");
+            initializePanel();
+            tableModel.setRowCount(0);
+        }
     }
 
     private void initializePanel() {
@@ -50,8 +59,10 @@ public class ImmunizationAdministrationPanel extends JPanel {
         table = new JTable(tableModel);
         setColumnWidths();
 
-        add(header, BorderLayout.NORTH);
-        add(searchPanel, BorderLayout.BEFORE_FIRST_LINE);
+        JPanel northPanel = new JPanel(new BorderLayout());
+        northPanel.add(header, BorderLayout.NORTH);
+        northPanel.add(searchPanel, BorderLayout.SOUTH);
+        add(northPanel, BorderLayout.NORTH);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
         refreshBtn.addActionListener(e -> loadData());
@@ -69,19 +80,12 @@ public class ImmunizationAdministrationPanel extends JPanel {
 
     public void loadData() {
         try {
-            ImmunizationAdministrationCRUD crud = new ImmunizationAdministrationCRUD();
-            java.util.List<ImmunizationAdministration> list = crud.readAll();
-            tableModel.setRowCount(0);
-            if (list == null || list.isEmpty()) {
-                ErrorDialog.showInfo("No immunization records returned");
+            if (controller != null) {
+                controller.loadAll();
                 return;
             }
-            for (ImmunizationAdministration ia : list) {
-                tableModel.addRow(new Object[]{
-                        ia.getImmunizationID(), ia.getPatientID(), ia.getMedicineID(), ia.gethWorkerID(), ia.getAdministrationDate(), ia.getVaccineType(), ia.getDosageNumber(), ia.getNextVaccinationDate(), ia.getImmunizationStatus() != null ? ia.getImmunizationStatus().getLabel() : "", ia.getSideEffects()
-                });
-            }
-        } catch (SQLException e) {
+            tableModel.setRowCount(0);
+        } catch (Exception e) {
             ErrorDialog.showError("Error loading records: " + e.getMessage());
         }
     }
@@ -122,10 +126,7 @@ public class ImmunizationAdministrationPanel extends JPanel {
                 int statusID = Integer.parseInt(statusField.getText().trim());
 
                 ImmunizationAdministration ia = new ImmunizationAdministration(0, patientID, medID, hw, adminDate, vaccine, dose, nextDate, new Status(statusID,0,"") , side);
-                ImmunizationAdministrationCRUD crud = new ImmunizationAdministrationCRUD();
-                crud.create(ia);
-                loadData();
-                ErrorDialog.showInfo("Record added");
+                if (controller != null) controller.create(ia);
             } catch (Exception e) { ErrorDialog.showError("Error adding record: " + e.getMessage()); }
         }
     }
@@ -170,10 +171,7 @@ public class ImmunizationAdministrationPanel extends JPanel {
             if (res == JOptionPane.OK_OPTION) {
                 try {
                     ImmunizationAdministration ia = new ImmunizationAdministration(id, Integer.parseInt(patientField.getText().trim()), Integer.parseInt(medicineField.getText().trim()), Integer.parseInt(hwField.getText().trim()), Date.valueOf(dateField.getText().trim()), vaccineField.getText().trim(), Integer.parseInt(doseField.getText().trim()), nextField.getText().trim().isEmpty() ? null : Date.valueOf(nextField.getText().trim()), new Status(0,0,statusField.getText().trim()), sideField.getText().trim());
-                    ImmunizationAdministrationCRUD crud = new ImmunizationAdministrationCRUD();
-                    crud.update(ia);
-                    loadData();
-                    ErrorDialog.showInfo("Record updated");
+                    if (controller != null) controller.update(ia);
                 } catch (Exception ex) { ErrorDialog.showError("Error updating record: " + ex.getMessage()); }
             }
 
@@ -185,12 +183,7 @@ public class ImmunizationAdministrationPanel extends JPanel {
         int id = (int) tableModel.getValueAt(row,0);
         int confirm = JOptionPane.showConfirmDialog(this, "Delete record " + id + "?", "Confirm", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                ImmunizationAdministrationCRUD crud = new ImmunizationAdministrationCRUD();
-                crud.delete(id);
-                loadData();
-                ErrorDialog.showInfo("Record deleted");
-            } catch (SQLException e) { ErrorDialog.showError("Error deleting record: " + e.getMessage()); }
+            if (controller != null) controller.delete(id);
         }
     }
 

@@ -101,7 +101,6 @@ public class ConsultationCRUD {
         }
         return null;
     }
-
     // UPDATE the consultation
     public void update(Consultation consultation) throws SQLException {
         if (!isWithinFacilityHours(consultation.getFacilityID(), consultation.getConsultationTime())) {

@@ -1,13 +1,13 @@
 package View;
 
+import Controller.ConsultationController;
+import Service.ConsultationService;
 import Model.Consultation;
-import Model.ConsultationCRUD;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.sql.Date;
-import java.sql.SQLException;
 import java.sql.Time;
 import java.util.List;
 
@@ -15,10 +15,20 @@ public class ConsultationPanel extends JPanel {
     private JTable table;
     private DefaultTableModel tableModel;
     private JTextField searchField;
+    private ConsultationController controller;
 
     public ConsultationPanel() {
-        initializePanel();
-        loadData();
+        try {
+            ConsultationService service = new ConsultationService();
+            initializePanel();
+            controller = new ConsultationController(this, service);
+            controller.loadAll();
+        } catch (Exception e) {
+            // fallback to demo mode
+            System.out.println("Database not available - using demo mode");
+            initializePanel();
+            tableModel.setRowCount(0);
+        }
     }
 
     private void initializePanel() {
@@ -50,8 +60,10 @@ public class ConsultationPanel extends JPanel {
         table = new JTable(tableModel);
         setColumnWidths();
 
-        add(header, BorderLayout.NORTH);
-        add(searchPanel, BorderLayout.BEFORE_FIRST_LINE);
+        JPanel northPanel = new JPanel(new BorderLayout());
+        northPanel.add(header, BorderLayout.NORTH);
+        northPanel.add(searchPanel, BorderLayout.SOUTH);
+        add(northPanel, BorderLayout.NORTH);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
         refreshBtn.addActionListener(e -> loadData());
@@ -69,14 +81,12 @@ public class ConsultationPanel extends JPanel {
 
     public void loadData() {
         try {
-            ConsultationCRUD crud = new ConsultationCRUD();
-            List<Consultation> list = crud.readAll();
-            tableModel.setRowCount(0);
-            if (list == null || list.isEmpty()) { ErrorDialog.showInfo("No consultation records returned"); return; }
-            for (Consultation c : list) {
-                tableModel.addRow(new Object[]{ c.getConsultationID(), c.getPatientID(), c.getHWorkerID(), c.getFacilityID(), c.getConsultationDate(), c.getConsultationTime(), c.getSymptoms(), c.getDiagnosis(), c.getPrescription(), c.getConsultationStatus() != null ? c.getConsultationStatus().name() : "" });
+            if (controller != null) {
+                controller.loadAll();
+                return;
             }
-        } catch (SQLException e) {
+            tableModel.setRowCount(0);
+        } catch (Exception e) {
             ErrorDialog.showError("Error loading consultations: " + e.getMessage());
         }
     }
@@ -114,13 +124,10 @@ public class ConsultationPanel extends JPanel {
                 String symptoms = symptomsField.getText().trim();
                 String diag = diagnosisField.getText().trim();
                 String pres = prescriptionField.getText().trim();
-                String statusLabel = statusField.getText().trim();
 
                 Consultation c = new Consultation(0, pid, hw, fid, d, t, symptoms, diag, pres, Consultation.Status.PENDING);
-                ConsultationCRUD crud = new ConsultationCRUD();
-                crud.create(c);
-                loadData();
-                ErrorDialog.showInfo("Consultation added");
+                if (controller != null) controller.create(c);
+                else tableModel.addRow(new Object[]{0, pid, hw, fid, d, t, symptoms, diag, pres, Consultation.Status.PENDING});
             } catch (Exception e) { ErrorDialog.showError("Error adding consultation: " + e.getMessage()); }
         }
     }
@@ -164,10 +171,7 @@ public class ConsultationPanel extends JPanel {
             if (res == JOptionPane.OK_OPTION) {
                 try {
                     Consultation c = new Consultation(id, Integer.parseInt(patientField.getText().trim()), Integer.parseInt(hwField.getText().trim()), Integer.parseInt(facilityField.getText().trim()), Date.valueOf(dateField.getText().trim()), Time.valueOf(timeField.getText().trim()), symptomsField.getText().trim(), diagnosisField.getText().trim(), prescriptionField.getText().trim(), Consultation.Status.PENDING);
-                    ConsultationCRUD crud = new ConsultationCRUD();
-                    crud.update(c);
-                    loadData();
-                    ErrorDialog.showInfo("Consultation updated");
+                    if (controller != null) controller.update(c);
                 } catch (Exception ex) { ErrorDialog.showError("Error updating consultation: " + ex.getMessage()); }
             }
         } catch (Exception e) { ErrorDialog.showError("Error preparing edit: " + e.getMessage()); }
@@ -178,12 +182,7 @@ public class ConsultationPanel extends JPanel {
         int id = (int) tableModel.getValueAt(row,0);
         int confirm = JOptionPane.showConfirmDialog(this, "Archive consultation " + id + "?", "Confirm", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                ConsultationCRUD crud = new ConsultationCRUD();
-                crud.archive(id);
-                loadData();
-                ErrorDialog.showInfo("Archived");
-            } catch (SQLException e) { ErrorDialog.showError("Error archiving consultation: " + e.getMessage()); }
+            if (controller != null) controller.archive(id);
         }
     }
 

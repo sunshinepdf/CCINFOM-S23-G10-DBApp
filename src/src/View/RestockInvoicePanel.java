@@ -1,5 +1,7 @@
 package View;
 
+import Controller.RestockInvoiceController;
+import Service.RestockInvoiceService;
 import Model.RestockInvoice;
 import Model.RestockInvoiceCRUD;
 import Model.Status;
@@ -17,10 +19,18 @@ public class RestockInvoicePanel extends JPanel {
     private JTable table;
     private DefaultTableModel tableModel;
     private JTextField searchField;
+    private RestockInvoiceController controller;
 
     public RestockInvoicePanel() {
-        initializePanel();
-        loadInvoices();
+        try {
+            RestockInvoiceService service = new RestockInvoiceService();
+            initializePanel();
+            controller = new RestockInvoiceController(this, service);
+            controller.loadAll();
+        } catch (Exception e) {
+            initializePanel();
+            loadInvoices();
+        }
     }
 
     private void initializePanel() {
@@ -52,8 +62,10 @@ public class RestockInvoicePanel extends JPanel {
         table = new JTable(tableModel);
         setColumnWidths();
 
-        add(header, BorderLayout.NORTH);
-        add(searchPanel, BorderLayout.BEFORE_FIRST_LINE);
+        JPanel northPanel = new JPanel(new BorderLayout());
+        northPanel.add(header, BorderLayout.NORTH);
+        northPanel.add(searchPanel, BorderLayout.SOUTH);
+        add(northPanel, BorderLayout.NORTH);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
         refreshBtn.addActionListener(e -> loadInvoices());
@@ -72,27 +84,18 @@ public class RestockInvoicePanel extends JPanel {
 
     public void loadInvoices() {
         try {
+            if (controller != null) {
+                controller.loadAll();
+                return;
+            }
             RestockInvoiceCRUD crud = new RestockInvoiceCRUD();
             List<RestockInvoice> list = crud.readAll();
             tableModel.setRowCount(0);
-            if (list == null || list.isEmpty()) {
-                ErrorDialog.showInfo("No invoices returned");
-                return;
-            }
+            if (list == null || list.isEmpty()) { ErrorDialog.showInfo("No invoices returned"); return; }
             for (RestockInvoice inv : list) {
-                tableModel.addRow(new Object[]{
-                        inv.getInvoiceID(),
-                        inv.getSupplierID(),
-                        inv.getPurchaseOrderID(),
-                        inv.getDeliveryDate(),
-                        inv.getReceivedBy(),
-                        inv.getTotalOrderCost(),
-                        inv.getDeliveryStatus() != null ? inv.getDeliveryStatus().getLabel() : ""
-                });
+                tableModel.addRow(new Object[]{ inv.getInvoiceID(), inv.getSupplierID(), inv.getPurchaseOrderID(), inv.getDeliveryDate(), inv.getReceivedBy(), inv.getTotalOrderCost(), inv.getDeliveryStatus() != null ? inv.getDeliveryStatus().getLabel() : "" });
             }
-        } catch (SQLException e) {
-            ErrorDialog.showError("Error loading invoices: " + e.getMessage());
-        }
+        } catch (SQLException e) { ErrorDialog.showError("Error loading invoices: " + e.getMessage()); }
     }
 
     private void showAddDialog() {
@@ -122,10 +125,13 @@ public class RestockInvoicePanel extends JPanel {
                 int statusID = Integer.parseInt(statusField.getText().trim());
 
                 RestockInvoice inv = new RestockInvoice(0, supplierID, po, delivery, receivedBy, total, new Status(statusID,0,"") );
-                RestockInvoiceCRUD crud = new RestockInvoiceCRUD();
-                crud.create(inv);
-                loadInvoices();
-                ErrorDialog.showInfo("Invoice created");
+                if (controller != null) controller.create(inv);
+                else {
+                    RestockInvoiceCRUD crud = new RestockInvoiceCRUD();
+                    crud.create(inv);
+                    loadInvoices();
+                    ErrorDialog.showInfo("Invoice created");
+                }
             } catch (Exception e) { ErrorDialog.showError("Error creating invoice: " + e.getMessage()); }
         }
     }
@@ -135,6 +141,39 @@ public class RestockInvoicePanel extends JPanel {
         if (row == -1) { JOptionPane.showMessageDialog(this, "Select an invoice to edit"); return; }
         int invoiceID = (int) tableModel.getValueAt(row,0);
         try {
+            if (controller != null) {
+                controller.fetchById(invoiceID, inv -> {
+                    if (inv == null) { ErrorDialog.showError("Invoice not found"); return; }
+                    JTextField supplierField = new JTextField(String.valueOf(inv.getSupplierID()));
+                    JTextField poField = new JTextField(inv.getPurchaseOrderID());
+                    JTextField dateField = new JTextField(inv.getDeliveryDate().toString());
+                    JTextField receivedField = new JTextField(String.valueOf(inv.getReceivedBy()));
+                    JTextField totalField = new JTextField(inv.getTotalOrderCost().toString());
+                    JTextField statusField = new JTextField(String.valueOf(inv.getDeliveryStatus() != null ? inv.getDeliveryStatus().getStatusID() : 1));
+
+                    JPanel p = new JPanel(new GridLayout(0,2,5,5));
+                    p.add(new JLabel("Supplier ID:")); p.add(supplierField);
+                    p.add(new JLabel("Purchase Order ID:")); p.add(poField);
+                    p.add(new JLabel("Delivery Date (YYYY-MM-DD):")); p.add(dateField);
+                    p.add(new JLabel("Received By (Worker ID):")); p.add(receivedField);
+                    p.add(new JLabel("Total Order Cost:")); p.add(totalField);
+                    p.add(new JLabel("Delivery Status ID:")); p.add(statusField);
+
+                    int res = JOptionPane.showConfirmDialog(this, p, "Edit Invoice", JOptionPane.OK_CANCEL_OPTION);
+                    if (res == JOptionPane.OK_OPTION) {
+                        try {
+                            inv.setSupplierID(Integer.parseInt(supplierField.getText().trim()));
+                            inv.setPurchaseOrderID(poField.getText().trim());
+                            inv.setDeliveryDate(Date.valueOf(dateField.getText().trim()));
+                            inv.setReceivedBy(Integer.parseInt(receivedField.getText().trim()));
+                            inv.setTotalOrderCost(new BigDecimal(totalField.getText().trim()));
+                            inv.setDeliveryStatus(new Status(Integer.parseInt(statusField.getText().trim()),0,"") );
+                            controller.update(inv);
+                        } catch (Exception ex) { ErrorDialog.showError("Error updating invoice: " + ex.getMessage()); }
+                    }
+                });
+                return;
+            }
             RestockInvoiceCRUD crud = new RestockInvoiceCRUD();
             RestockInvoice inv = crud.getInvoiceById(invoiceID);
             if (inv == null) { ErrorDialog.showError("Invoice not found"); return; }
@@ -155,21 +194,20 @@ public class RestockInvoicePanel extends JPanel {
             p.add(new JLabel("Delivery Status ID:")); p.add(statusField);
 
             int res = JOptionPane.showConfirmDialog(this, p, "Edit Invoice", JOptionPane.OK_CANCEL_OPTION);
-            if (res == JOptionPane.OK_OPTION) {
-                try {
-                    inv.setSupplierID(Integer.parseInt(supplierField.getText().trim()));
-                    inv.setPurchaseOrderID(poField.getText().trim());
-                    inv.setDeliveryDate(Date.valueOf(dateField.getText().trim()));
-                    inv.setReceivedBy(Integer.parseInt(receivedField.getText().trim()));
-                    inv.setTotalOrderCost(new BigDecimal(totalField.getText().trim()));
-                    inv.setDeliveryStatus(new Status(Integer.parseInt(statusField.getText().trim()),0,"") );
-                    crud.update(inv);
-                    loadInvoices();
-                    ErrorDialog.showInfo("Invoice updated");
-                } catch (Exception ex) { ErrorDialog.showError("Error updating invoice: " + ex.getMessage()); }
-            }
-
-        } catch (SQLException e) { ErrorDialog.showError("Error loading invoice: " + e.getMessage()); }
+                if (res == JOptionPane.OK_OPTION) {
+                    try {
+                        inv.setSupplierID(Integer.parseInt(supplierField.getText().trim()));
+                        inv.setPurchaseOrderID(poField.getText().trim());
+                        inv.setDeliveryDate(Date.valueOf(dateField.getText().trim()));
+                        inv.setReceivedBy(Integer.parseInt(receivedField.getText().trim()));
+                        inv.setTotalOrderCost(new BigDecimal(totalField.getText().trim()));
+                        inv.setDeliveryStatus(new Status(Integer.parseInt(statusField.getText().trim()),0,"") );
+                        crud.update(inv);
+                        loadInvoices();
+                        ErrorDialog.showInfo("Invoice updated");
+                    } catch (Exception ex) { ErrorDialog.showError("Error updating invoice: " + ex.getMessage()); }
+                }
+            } catch (SQLException e) { ErrorDialog.showError("Error loading invoice: " + e.getMessage()); }
     }
 
     private void closeSelected() {
@@ -178,12 +216,16 @@ public class RestockInvoicePanel extends JPanel {
         int invoiceID = (int) tableModel.getValueAt(row,0);
         int confirm = JOptionPane.showConfirmDialog(this, "Close invoice " + invoiceID + "?", "Confirm", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                RestockInvoiceCRUD crud = new RestockInvoiceCRUD();
-                crud.softDelete(invoiceID);
-                loadInvoices();
-                ErrorDialog.showInfo("Invoice closed");
-            } catch (SQLException e) { ErrorDialog.showError("Error closing invoice: " + e.getMessage()); }
+            if (controller != null) {
+                controller.softDelete(invoiceID);
+            } else {
+                try {
+                    RestockInvoiceCRUD crud = new RestockInvoiceCRUD();
+                    crud.softDelete(invoiceID);
+                    loadInvoices();
+                    ErrorDialog.showInfo("Invoice closed");
+                } catch (SQLException e) { ErrorDialog.showError("Error closing invoice: " + e.getMessage()); }
+            }
         }
     }
 
