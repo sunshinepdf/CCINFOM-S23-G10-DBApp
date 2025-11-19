@@ -7,8 +7,8 @@ import javax.swing.table.DefaultTableModel;
 public class PrescriptionCRUD {
 
     private Connection conn;
-    private static final int COMPLETED_STATUS_ID = 20;   
-    private static final int PENDING_STATUS_ID = 21;    
+    // private static final int COMPLETED_STATUS_ID = 20;   
+    // private static final int PENDING_STATUS_ID = 21;    
     private static final int ARCHIVED_STATUS_ID = 22;  
 
     public PrescriptionCRUD(Connection conn) {
