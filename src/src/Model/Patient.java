@@ -83,12 +83,12 @@ public class Patient {
     private Gender gender;
     private BloodType bloodType;
     private String address;
-    private int primaryPhone;
+    private String primaryPhone;
     private String emergencyContact;
     private Status patientStatus;
 
     public Patient(int patientID, String lastName, String firstName, Date birthDate, Gender gender,
-                   BloodType bloodType, String address, int primaryPhone, String emergencyContact,
+                   BloodType bloodType, String address, String primaryPhone, String emergencyContact,
                    Status patientStatus) {
         this.patientID = patientID;
         this.lastName = lastName;
@@ -151,10 +151,10 @@ public class Patient {
         this.address = address;
     }
 
-    public int getPrimaryPhone() {
+    public String getPrimaryPhone() {
         return primaryPhone;
     }
-    public void setPrimaryPhone(int primaryPhone) {
+    public void setPrimaryPhone(String primaryPhone) {
         this.primaryPhone = primaryPhone;
     }
 

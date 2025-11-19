@@ -9,7 +9,7 @@ public class PatientCRUD {
     //create
     public void create(Patient p) throws SQLException{
         String sql = "INSERT INTO patient(lastName, firstName, birthDate, " +
-                "gender, bloodType, address, primaryPhone, emergencyContact, statusID) " +
+                "gender, bloodType, address, primaryPhone, emergencyContact, patientStatusID) " +
                 "VALUES(?,?,?,?,?,?,?,?,?)";
 
         try (Connection conn = DBConnection.connectDB();
@@ -20,7 +20,7 @@ public class PatientCRUD {
             pstmt.setString(4, p.getGender().getLabel());
             pstmt.setString(5, p.getBloodType().getLabel());
             pstmt.setString(6, p.getAddress());
-            pstmt.setInt(7, p.getPrimaryPhone());
+            pstmt.setString(7, p.getPrimaryPhone());
             pstmt.setString(8, p.getEmergencyContact());
             int statusID = convertStatusToID(p.getPatientStatus());
             pstmt.setInt(9, statusID);
@@ -33,7 +33,7 @@ public class PatientCRUD {
     public List<Patient> readAll() throws SQLException{
         List<Patient> patients = new ArrayList<>();
         String sql = "SELECT p.*, s.statusName FROM patient p " +
-                    "JOIN REF_Status s ON p.statusID = s.statusID" +
+                    "JOIN REF_Status s ON p.patientStatusID = s.statusID " +
                     "WHERE s.statusCategoryID = 3";
 
         //[EDIT]: Refactored the connection portion to prevent long-live connection leaks
@@ -50,7 +50,7 @@ public class PatientCRUD {
                     Patient.Gender.fromGender(rs.getString("gender")),
                     Patient.BloodType.fromBloodType(rs.getString("bloodType")),
                     rs.getString("address"),
-                    rs.getInt("primaryPhone"),
+                    rs.getString("primaryPhone"),
                     rs.getString("emergencyContact"),
                     convertStatusNameToEnum(rs.getString("statusName"))
                 );
@@ -63,7 +63,7 @@ public class PatientCRUD {
     //update
     public void update(Patient p) throws SQLException {
         String sql = "UPDATE patient SET lastName=?, firstName=?, birthDate=?, gender=?, " +
-                "bloodType=?, address=?, primaryPhone=?, emergencyContact=?, patientStatus=?" +
+                "bloodType=?, address=?, primaryPhone=?, emergencyContact=?, patientStatusID=? " +
                 "WHERE patientID=?";
         try (Connection conn = DBConnection.connectDB();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -73,7 +73,7 @@ public class PatientCRUD {
             pstmt.setString(4, p.getGender().getLabel());
             pstmt.setString(5, p.getBloodType().getLabel());
             pstmt.setString(6, p.getAddress());
-            pstmt.setInt(7, p.getPrimaryPhone());
+            pstmt.setString(7, p.getPrimaryPhone());
             pstmt.setString(8, p.getEmergencyContact());
             int statusID = convertStatusToID(p.getPatientStatus());
             pstmt.setInt(9, statusID);
@@ -115,8 +115,8 @@ public class PatientCRUD {
 
     public Patient getPatientById(int patientId) throws SQLException {
         String sql = "SELECT p.*, s.statusName FROM patient p " +
-                    "JOIN REF_Status s ON p.statusID = s.statusID " +
-                    "WHERE p.patientID = ? AND s.statusCategoryID = 3";
+                    "JOIN REF_Status s ON p.patientStatusID = s.statusID " +
+                    "WHERE p.patientID = ? AND s.statusCategoryID = 3 AND s.statusID = 6";
         
         try (Connection conn = DBConnection.connectDB();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -131,7 +131,7 @@ public class PatientCRUD {
                         Patient.Gender.fromGender(rs.getString("gender")),
                         Patient.BloodType.fromBloodType(rs.getString("bloodType")),
                         rs.getString("address"),
-                        rs.getInt("primaryPhone"),
+                        rs.getString("primaryPhone"),
                         rs.getString("emergencyContact"),
                         convertStatusNameToEnum(rs.getString("statusName"))
                     );
