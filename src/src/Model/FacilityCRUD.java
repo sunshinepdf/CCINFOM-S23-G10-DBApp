@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FacilityCRUD {
-    private Connection conn = DBConnection.getConnection();
+    private Connection conn = DBConnection.connectDB();
     private StatusDAO statusDAO = new StatusDAO(conn);
 
     // create

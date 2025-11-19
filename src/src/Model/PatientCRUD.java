@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PatientCRUD {
-    private Connection conn = DBConnection.getConnection();
-    StatusDAO statusDAO = new StatusDAO(conn);
 
     //create
     public void create(Patient p) throws SQLException{
@@ -14,7 +12,8 @@ public class PatientCRUD {
                 "gender, bloodType, address, primaryPhone, emergencyContact, statusID) " +
                 "VALUES(?,?,?,?,?,?,?,?,?)";
 
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, p.getLastName());
             pstmt.setString(2, p.getFirstName());
             pstmt.setDate(3, p.getBirthDate());
@@ -66,7 +65,8 @@ public class PatientCRUD {
         String sql = "UPDATE patient SET lastName=?, firstName=?, birthDate=?, gender=?, " +
                 "bloodType=?, address=?, primaryPhone=?, emergencyContact=?, patientStatus=?" +
                 "WHERE patientID=?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, p.getLastName());
             pstmt.setString(2, p.getFirstName());
             pstmt.setDate(3, p.getBirthDate());
@@ -87,7 +87,8 @@ public class PatientCRUD {
     public void delete(int id) throws SQLException {
         String sql = "DELETE FROM patient WHERE patientID = ?";
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, id);
             stmt.executeUpdate();
@@ -117,7 +118,8 @@ public class PatientCRUD {
                     "JOIN REF_Status s ON p.statusID = s.statusID " +
                     "WHERE p.patientID = ? AND s.statusCategoryID = 3";
         
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, patientId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {

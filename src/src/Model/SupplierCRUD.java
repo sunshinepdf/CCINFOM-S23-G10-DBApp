@@ -5,15 +5,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SupplierCRUD {
-    private Connection conn = DBConnection.getConnection();
-    private StatusDAO statusDAO = new StatusDAO(conn);
 
     // create
     public void create(Supplier supplier) throws SQLException {
         String sql = "INSERT INTO supplier(supplierName, address, contactDetails, supplierType, deliveryLeadTime, transactionDetails, statusID) " +
                 "VALUES(?,?,?,?,?,?,?)";
 
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, supplier.getSupplierName());
             pstmt.setString(2, supplier.getAddress());
             pstmt.setString(3, supplier.getContactDetails());
@@ -35,7 +34,8 @@ public class SupplierCRUD {
                     "JOIN REF_Status st ON s.statusID = st.statusID " +
                     "WHERE st.statusCategoryID = 5"; 
 
-        try (Statement stmt = conn.createStatement();
+        try (Connection conn = DBConnection.connectDB();
+             Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
@@ -61,7 +61,8 @@ public class SupplierCRUD {
                 "supplierType=?, deliveryLeadTime=?, transactionDetails=?, statusID=? " +
                 "WHERE supplierID=?";
         
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, supplier.getSupplierName());
             pstmt.setString(2, supplier.getAddress());
             pstmt.setString(3, supplier.getContactDetails());
@@ -81,7 +82,8 @@ public class SupplierCRUD {
     public void softDelete(int supplierId) throws SQLException {
         String sql = "UPDATE supplier SET statusID = ? WHERE supplierID = ?";
         
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, 12);
             pstmt.setInt(2, supplierId);
             pstmt.executeUpdate();
@@ -91,7 +93,8 @@ public class SupplierCRUD {
     public void restore(int supplierId) throws SQLException {
         String sql = "UPDATE supplier SET statusID = ? WHERE supplierID = ?";
         
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, 11);
             pstmt.setInt(2, supplierId);
             pstmt.executeUpdate();
@@ -103,7 +106,8 @@ public class SupplierCRUD {
                     "JOIN REF_Status st ON s.statusID = st.statusID " +
                     "WHERE s.supplierID = ? AND st.statusCategoryID = 5";
         
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, supplierId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {

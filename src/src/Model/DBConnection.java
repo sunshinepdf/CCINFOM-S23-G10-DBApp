@@ -9,7 +9,7 @@ public class DBConnection {
     private static final String USER = "root";
     private static final String PASS = "pass";
 
-    public static Connection getConnection() {
+    public static Connection connectDB() {
         try{
             return DriverManager.getConnection(URL, USER, PASS);
         } catch (Exception e){
