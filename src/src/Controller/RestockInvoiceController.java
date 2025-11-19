@@ -4,6 +4,7 @@ import Service.RestockInvoiceService;
 import Service.ServiceResult;
 import View.RestockInvoicePanel;
 import Model.RestockInvoice;
+import java.util.function.Consumer;
 
 public class RestockInvoiceController extends BaseController {
     private final RestockInvoicePanel view;
@@ -74,6 +75,19 @@ public class RestockInvoiceController extends BaseController {
                 thr -> { view.showLoading(false); view.showError("Unexpected error: " + thr.getMessage()); },
                 null,
                 null
+        );
+    }
+
+    public void fetchById(int id, Consumer<RestockInvoice> cb) {
+        executeInBackground(
+                () -> service.getById(id),
+                (ServiceResult<RestockInvoice> res) -> {
+                    if (res.isSuccess()) cb.accept(res.getData());
+                    else view.showError(res.getError());
+                },
+                thr -> view.showError(thr.getMessage()),
+                () -> view.showLoading(true),
+                () -> view.showLoading(false)
         );
     }
 }
