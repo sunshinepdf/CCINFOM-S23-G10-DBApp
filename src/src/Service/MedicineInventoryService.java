@@ -5,7 +5,6 @@ import Model.MedicineInventory;
 import java.sql.SQLException;
 import java.util.List;
 
-
 public class MedicineInventoryService {
     private final MedicineInventoryCRUD dao;
 
@@ -25,6 +24,15 @@ public class MedicineInventoryService {
     public ServiceResult<Void> create(MedicineInventory m) {
         try {
             dao.create(m);
+            return ServiceResult.ok(null);
+        } catch (SQLException e) {
+            return ServiceResult.fail(SqlErrorMapper.normalize(e));
+        }
+    }
+
+    public ServiceResult<Void> update(MedicineInventory m) {
+        try {
+            dao.update(m);
             return ServiceResult.ok(null);
         } catch (SQLException e) {
             return ServiceResult.fail(SqlErrorMapper.normalize(e));
