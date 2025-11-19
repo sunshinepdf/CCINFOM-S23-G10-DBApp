@@ -1,4 +1,3 @@
-
 USE BHMS_DB;
 -- CONSULTATION SUMMARY REPORT (Assigned to ASHLEY) --
 CREATE OR REPLACE VIEW ConsultationSummary_Week AS 
