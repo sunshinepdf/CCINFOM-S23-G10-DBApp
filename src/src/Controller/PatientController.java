@@ -1,6 +1,6 @@
 package Controller;
 
-import PatientService;
+import Service.PatientService;
 import View.PatientPanel;
 
 public class PatientController extends BaseController {
