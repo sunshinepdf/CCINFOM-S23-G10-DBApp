@@ -1,3 +1,5 @@
+USE BHMS_DB;
+
 -- MEDICINE DISTRIBUTION DETAILS VIEW (Assigned to SPENCER, Created by ASHLEY) --
 CREATE VIEW medicine_distribution_history AS
 SELECT
@@ -132,4 +134,3 @@ FROM immunization_administration ia
 JOIN patient p ON ia.patientID = p.patientID
 JOIN worker w ON ia.hWorkerID = w.hWorkerID
 JOIN medicine m ON ia.medicineID = m.medicineID;
-
